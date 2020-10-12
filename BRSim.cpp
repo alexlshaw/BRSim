@@ -5,6 +5,7 @@
 #include "glm/glm.hpp"
 #include "glm\gtc\matrix_transform.hpp"
 #include "glm\gtx\transform.hpp" 
+#include "glm\gtx\compatibility.hpp"
 #include "time.h"
 #include <iostream>
 #include <thread>
@@ -12,6 +13,7 @@
 #include "AgentManager.h"
 #include "Agent.h"
 #include "CStopWatch.h"
+#include "Mesh.h"
 #include "Settings.h"
 #include "Shader.h"
 #include "Vertex.h"
@@ -29,13 +31,24 @@ GLuint avbo, avao, aibo;
 GLuint tvbo, tvao, tibo;
 
 AgentManager* manager = nullptr;
+Mesh agentMesh, agentTargetingCircleMesh;
 
+//circle of death properties
+Mesh circleOfDeathMesh, nextCircleMesh;
+glm::vec2 circleCentre = glm::vec2(512.0f, 512.0f);
+float circleRadius = INITIAL_CIRCLE_RADIUS;
+float previousCircleRadius = circleRadius;
+float nextCircleRadius;
+glm::vec2 nextCircleCentre;
+glm::vec2 previousCircleCentre = circleCentre;
+float elapsedShrinkTime = 0.0f;
 
-void buildAgentMesh()
+void buildMeshes()
 {
 	glm::vec4 white = glm::vec4(1.0f, 1.0f, 1.0f, 1.0f);
 	glm::vec4 black = glm::vec4(0.0f, 0.0f, 0.0f, 1.0f);
 	glm::vec4 red = glm::vec4(1.0f, 0.0f, 0.0f, 1.0f);
+	glm::vec4 blue = glm::vec4(0.0f, 0.0f, 1.0f, 0.35f);
 	std::vector<Vertex> vertices;
 	vertices.push_back(Vertex(glm::vec4(16.0f, 0.0f, 0.0f, 1.0f), black));
 	vertices.push_back(Vertex(glm::vec4(0.0f, 4.0f, 0.0f, 1.0f), black));
@@ -44,29 +57,13 @@ void buildAgentMesh()
 	indices.push_back(0);
 	indices.push_back(1);
 	indices.push_back(2);
-	indices.push_back(0);
 
-	//seems a bit overkill but whatever
-	glGenVertexArrays(1, &avao);
-	glGenBuffers(1, &avbo);
-	glBindVertexArray(avao);
-	glBindBuffer(GL_ARRAY_BUFFER, avbo);
-	glBufferData(GL_ARRAY_BUFFER, sizeof(Vertex) * vertices.size(), &vertices[0], GL_STATIC_DRAW);
-	//position
-	glVertexAttribPointer(0, 4, GL_FLOAT, GL_FALSE, sizeof(Vertex), (const GLvoid*)0);
-	glEnableVertexAttribArray(0);
-	//color
-	glVertexAttribPointer(1, 4, GL_FLOAT, GL_FALSE, sizeof(Vertex), (const GLvoid*)16);
-	glEnableVertexAttribArray(1);
-	glGenBuffers(1, &aibo);
-	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, aibo);
-	glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(int) * indices.size(), &indices[0], GL_STATIC_DRAW);
-	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0);
+	agentMesh.Load(vertices, indices);
 
 	//now build the agent awareness/targeting circle mesh
 	vertices.clear();
 	indices.clear();
-	int sides = 16;
+	int sides = 32;
 	for (int i = 0; i < sides; i++)
 	{
 		float angle = glm::radians((360.0f / (float)sides) * (float)i);
@@ -74,22 +71,45 @@ void buildAgentMesh()
 		vertices.push_back(Vertex(p, red));
 		indices.push_back(i);
 	}
-	indices.push_back(0);
-	glGenVertexArrays(1, &tvao);
-	glGenBuffers(1, &tvbo);
-	glBindVertexArray(tvao);
-	glBindBuffer(GL_ARRAY_BUFFER, tvbo);
-	glBufferData(GL_ARRAY_BUFFER, sizeof(Vertex) * vertices.size(), &vertices[0], GL_STATIC_DRAW);
-	//position
-	glVertexAttribPointer(0, 4, GL_FLOAT, GL_FALSE, sizeof(Vertex), (const GLvoid*)0);
-	glEnableVertexAttribArray(0);
-	//color
-	glVertexAttribPointer(1, 4, GL_FLOAT, GL_FALSE, sizeof(Vertex), (const GLvoid*)16);
-	glEnableVertexAttribArray(1);
-	glGenBuffers(1, &tibo);
-	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, tibo);
-	glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(int) * indices.size(), &indices[0], GL_STATIC_DRAW);
-	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0);
+	agentTargetingCircleMesh.Load(vertices, indices);
+
+	//now we build the circle of death mesh
+	vertices.clear();
+	indices.clear();
+	for (int i = 0; i < sides; i++)
+	{
+		float angle1 = glm::radians((360.0f / (float)sides) * (float)i);
+		float angle2 = glm::radians((360.0f / (float)sides) * (float)(i + 1));
+		glm::vec4 p1 = glm::vec4(glm::cos(angle1), glm::sin(angle1), 0.0f, 1.0f);
+		glm::vec4 p2 = glm::vec4(glm::cos(angle2), glm::sin(angle2), 0.0f, 1.0f);
+		glm::vec4 p3 = glm::vec4(p1.x * 50.0f, p1.y * 50.0f, 0.0f, 1.0f);
+		glm::vec4 p4 = glm::vec4(p2.x * 50.0f, p2.y * 50.0f, 0.0f, 1.0f);
+		vertices.push_back(Vertex(p1, blue));	//i * 4
+		vertices.push_back(Vertex(p2, blue));
+		vertices.push_back(Vertex(p3, blue));	
+		vertices.push_back(Vertex(p4, blue));
+		//tri 1 (p1->p4->p2)
+		indices.push_back(i * 4);
+		indices.push_back(i * 4 + 3);
+		indices.push_back(i * 4 + 1);
+		//tri 2 (p1->p3->p4)
+		indices.push_back(i * 4);
+		indices.push_back(i * 4 + 2);
+		indices.push_back(i * 4 + 3);
+	}
+	circleOfDeathMesh.Load(vertices, indices);
+
+	//now we build the nextCircle mesh (same as targeting circle but in blue, need to make this generic)
+	vertices.clear();
+	indices.clear();
+	for (int i = 0; i < sides; i++)
+	{
+		float angle = glm::radians((360.0f / (float)sides) * (float)i);
+		glm::vec4 p = glm::vec4(glm::cos(angle), glm::sin(angle), 0.0f, 1.0f);
+		vertices.push_back(Vertex(p, blue));
+		indices.push_back(i);
+	}
+	nextCircleMesh.Load(vertices, indices);
 }
 
 void error_callback(int error, const char* description)
@@ -170,22 +190,46 @@ void init_GL()
 	glViewport(0, 0, width, height);
 }
 
+void computeNewCircle()
+{
+	nextCircleRadius = circleRadius / 2.0f;
+	//compute random bearing and distance from current circle centre
+	float angle = glm::radians((float)(rand() % 360));
+	float distance = (float)(rand() % (int)nextCircleRadius);
+	nextCircleCentre = circleCentre + glm::vec2(glm::cos(angle) * distance, glm::sin(angle) * distance);
+}
+
 void update(float frameTime)
 {
 	manager->updateAgents(frameTime);
+	manager->killAgentsOutsideCircle(circleCentre, circleRadius);
+	elapsedShrinkTime += frameTime;
+	float t = elapsedShrinkTime / CIRCLE_SHRINK_TIME;
+	//if we're finished shrinking this circle
+	if (t >= 1.0f)
+	{
+		circleRadius = nextCircleRadius;
+		circleCentre = nextCircleCentre;
+		previousCircleRadius = circleRadius;
+		previousCircleCentre = circleCentre;
+		computeNewCircle();
+		elapsedShrinkTime = 0.0f;
+	}
+	else
+	{
+		circleRadius = glm::lerp(previousCircleRadius, nextCircleRadius, t);
+		circleCentre = glm::lerp(previousCircleCentre, nextCircleCentre, t);
+	}
 }
 
 void draw()
 {
 	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 	glm::mat4 projection = glm::ortho(0.0f, (float)screenWidth, 0.0f, (float)screenHeight, -1.0f, 1.0f);
-	//glm::mat4 modelview = glm::identity<glm::mat4>();
-	
+
 	basic->use();
 	basic->setUniform(uBProjMatrix, projection);
 
-	glBindVertexArray(avao);
-	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, aibo);
 	for (auto& agent : manager->agents)
 	{
 		glm::mat4 tr = glm::translate(glm::vec3(agent.pos.x, agent.pos.y, 0.0f));
@@ -194,17 +238,14 @@ void draw()
 		basic->setUniform(uBModelMatrix, modelview);
 		if (agent.alive)
 		{
-			glDrawElements(GL_TRIANGLES, 3, GL_UNSIGNED_INT, (void*)0);
+			agentMesh.draw();
 		}
 		else
 		{
-			glDrawElements(GL_LINE_STRIP, 4, GL_UNSIGNED_INT, (void*)0);
+			agentMesh.draw(GL_LINE_LOOP);
 		}
 	}
-	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0);
 	//draw targeting circles
-	glBindVertexArray(tvao);
-	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, tibo);
 	for (auto& agent : manager->agents)
 	{
 		glm::mat4 tr = glm::translate(glm::vec3(agent.pos.x, agent.pos.y, 0.0f));
@@ -213,10 +254,23 @@ void draw()
 		basic->setUniform(uBModelMatrix, modelview);
 		if (agent.alive)
 		{
-			glDrawElements(GL_LINE_STRIP, 17, GL_UNSIGNED_INT, (void*)0);
+			agentTargetingCircleMesh.draw(GL_LINE_LOOP);
 		}
 	}
-	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0);
+
+	//draw circle of death
+	glm::mat4 tr = glm::translate(glm::vec3(circleCentre.x, circleCentre.y, 0.0f));
+	glm::mat4 sc = glm::scale(glm::vec3(circleRadius, circleRadius, circleRadius));
+	glm::mat4 modelview = tr * sc;
+	basic->setUniform(uBModelMatrix, modelview);
+	circleOfDeathMesh.draw();
+
+	//draw upcoming circle
+	tr = glm::translate(glm::vec3(nextCircleCentre.x, nextCircleCentre.y, 0.0f));
+	sc = glm::scale(glm::vec3(nextCircleRadius, nextCircleRadius, nextCircleRadius));
+	modelview = tr * sc;
+	basic->setUniform(uBModelMatrix, modelview);
+	nextCircleMesh.draw(GL_LINE_LOOP);
 
 	glfwSwapBuffers(mainWindow);
 }
@@ -238,8 +292,6 @@ void exit()
 		delete manager;
 		manager = nullptr;
 	}
-	glDeleteBuffers(1, &avbo);
-	glDeleteBuffers(1, &aibo);
 	glfwTerminate();
 }
 
@@ -247,6 +299,7 @@ void generateData()
 {
 	int sTime = (int)time(NULL);
 	manager = new AgentManager(MAX_AGENTS);
+	computeNewCircle();
 	int tTime = (int)time(NULL) - sTime;
 	printf("Generation time: %i\n", tTime);
 }
@@ -261,7 +314,7 @@ int main()
 	init_GL();
 	srand((unsigned int)(time(NULL)));
 	generateData();
-	buildAgentMesh();
+	buildMeshes();
 	timer.Reset();
 	/* Loop until the user closes the window */
 	while (!shouldExit && !glfwWindowShouldClose(mainWindow))

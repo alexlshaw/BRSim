@@ -12,6 +12,7 @@ public:
 	~AgentManager();
 	std::vector<Agent> agents;
 	void updateAgents(float frameTime);
+	void killAgentsOutsideCircle(glm::vec2 circleCentre, float circleRadius);
 private:
 	float agentMaxRotateSpeed; //in degrees/sec
 	float agentMaxSpeed;	//in pixels/sec

@@ -157,6 +157,7 @@
     <ClCompile Include="AgentManager.cpp" />
     <ClCompile Include="glad.c" />
     <ClCompile Include="BRSim.cpp" />
+    <ClCompile Include="Mesh.cpp" />
     <ClCompile Include="Shader.cpp" />
     <ClCompile Include="Texture.cpp" />
   </ItemGroup>
@@ -173,6 +174,7 @@
     <ClInclude Include="Agent.h" />
     <ClInclude Include="AgentManager.h" />
     <ClInclude Include="CStopWatch.h" />
+    <ClInclude Include="Mesh.h" />
     <ClInclude Include="Settings.h" />
     <ClInclude Include="Shader.h" />
     <ClInclude Include="Texture.h" />

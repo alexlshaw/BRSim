@@ -62,7 +62,16 @@ void AgentManager::updateAgents(float frameTime)
 	}
 }
 
-
+void AgentManager::killAgentsOutsideCircle(glm::vec2 circleCentre, float circleRadius)
+{
+	for (auto& agent : agents)
+	{
+		if (glm::length(agent.pos - circleCentre) > circleRadius)
+		{
+			agent.alive = false;
+		}
+	}
+}
 
 void AgentManager::agentFight(Agent& agent, Agent& other, float deltaTime)
 {
