@@ -11,11 +11,11 @@ public:
 	AgentManager(int agentCount);
 	~AgentManager();
 	std::vector<Agent> agents;
-	void updateAgents(float frameTime);
+	void updateAgents(float frameTime, glm::vec2 nextCircleCentre, float nextCircleRadius);
 	void killAgentsOutsideCircle(glm::vec2 circleCentre, float circleRadius);
+	int agentsAlive;
 private:
-	float agentMaxRotateSpeed; //in degrees/sec
-	float agentMaxSpeed;	//in pixels/sec
 	void agentFight(Agent& agent, Agent& other, float deltaTime);
 	void agentAttack(Agent& agent, Agent& other);
+	void killAgent(Agent& agent);
 };

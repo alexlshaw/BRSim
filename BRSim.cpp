@@ -33,6 +33,9 @@ GLuint tvbo, tvao, tibo;
 AgentManager* manager = nullptr;
 Mesh agentMesh, agentTargetingCircleMesh;
 
+Mesh lineMesh;
+std::vector<glm::vec2> linePoints;
+
 //circle of death properties
 Mesh circleOfDeathMesh, nextCircleMesh;
 glm::vec2 circleCentre = glm::vec2(512.0f, 512.0f);
@@ -49,6 +52,7 @@ void buildMeshes()
 	glm::vec4 black = glm::vec4(0.0f, 0.0f, 0.0f, 1.0f);
 	glm::vec4 red = glm::vec4(1.0f, 0.0f, 0.0f, 1.0f);
 	glm::vec4 blue = glm::vec4(0.0f, 0.0f, 1.0f, 0.35f);
+	glm::vec4 green = glm::vec4(0.0f, 1.0f, 0.0f, 1.0f);
 	std::vector<Vertex> vertices;
 	vertices.push_back(Vertex(glm::vec4(16.0f, 0.0f, 0.0f, 1.0f), black));
 	vertices.push_back(Vertex(glm::vec4(0.0f, 4.0f, 0.0f, 1.0f), black));
@@ -201,30 +205,59 @@ void computeNewCircle()
 
 void update(float frameTime)
 {
-	manager->updateAgents(frameTime);
-	manager->killAgentsOutsideCircle(circleCentre, circleRadius);
-	elapsedShrinkTime += frameTime;
-	float t = elapsedShrinkTime / CIRCLE_SHRINK_TIME;
-	//if we're finished shrinking this circle
-	if (t >= 1.0f)
+	if (manager->agentsAlive > 1)
 	{
-		circleRadius = nextCircleRadius;
-		circleCentre = nextCircleCentre;
-		previousCircleRadius = circleRadius;
-		previousCircleCentre = circleCentre;
-		computeNewCircle();
-		elapsedShrinkTime = 0.0f;
+		manager->updateAgents(frameTime, nextCircleCentre, nextCircleRadius);
+		manager->killAgentsOutsideCircle(circleCentre, circleRadius);
+		elapsedShrinkTime += frameTime;
+		float t = elapsedShrinkTime / CIRCLE_SHRINK_TIME;
+		//if we're finished shrinking this circle
+		if (t >= 1.0f)
+		{
+			circleRadius = nextCircleRadius;
+			circleCentre = nextCircleCentre;
+			previousCircleRadius = circleRadius;
+			previousCircleCentre = circleCentre;
+			computeNewCircle();
+			elapsedShrinkTime = 0.0f;
+		}
+		else
+		{
+			circleRadius = glm::lerp(previousCircleRadius, nextCircleRadius, t);
+			circleCentre = glm::lerp(previousCircleCentre, nextCircleCentre, t);
+		}
 	}
-	else
+}
+
+//this function doesn't actually draw a line, it just adds the line data to the batch to be drawn later
+void drawLine(glm::vec2 start, glm::vec2 end)
+{
+	linePoints.push_back(start);
+	linePoints.push_back(end);
+}
+
+//this function takes the accumulated line data, and sends it off to the GPU to be drawn
+void drawLines()
+{
+	if (linePoints.size() > 0)
 	{
-		circleRadius = glm::lerp(previousCircleRadius, nextCircleRadius, t);
-		circleCentre = glm::lerp(previousCircleCentre, nextCircleCentre, t);
+		std::vector<Vertex> vertices;
+		std::vector<unsigned int> indices;
+		for (unsigned int i = 0; i < linePoints.size(); i++)
+		{
+			vertices.push_back(Vertex(glm::vec4(linePoints[i].x, linePoints[i].y, 0.0f, 1.0f), glm::vec4(0.0f, 1.0f, 0.0f, 1.0f)));
+			indices.push_back(i);
+		}
+		lineMesh.Load(vertices, indices);
+		basic->setUniform(uBModelMatrix, glm::identity<glm::mat4>());
+		lineMesh.draw(GL_LINES);
 	}
 }
 
 void draw()
 {
 	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+	linePoints.clear();
 	glm::mat4 projection = glm::ortho(0.0f, (float)screenWidth, 0.0f, (float)screenHeight, -1.0f, 1.0f);
 
 	basic->use();
@@ -258,6 +291,15 @@ void draw()
 		}
 	}
 
+	//draw target lines
+	for (auto& agent : manager->agents)
+	{
+		if (agent.hasTarget)
+		{
+			drawLine(agent.pos, agent.targetPosition);
+		}
+	}
+
 	//draw circle of death
 	glm::mat4 tr = glm::translate(glm::vec3(circleCentre.x, circleCentre.y, 0.0f));
 	glm::mat4 sc = glm::scale(glm::vec3(circleRadius, circleRadius, circleRadius));
@@ -271,6 +313,8 @@ void draw()
 	modelview = tr * sc;
 	basic->setUniform(uBModelMatrix, modelview);
 	nextCircleMesh.draw(GL_LINE_LOOP);
+
+	drawLines();
 
 	glfwSwapBuffers(mainWindow);
 }

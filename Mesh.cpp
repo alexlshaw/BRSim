@@ -8,6 +8,12 @@ Mesh::Mesh()
 
 void Mesh::Load(std::vector<Vertex> vertices, std::vector<unsigned int> indices)
 {
+	//if we already had data in this mesh, clear it out
+	if (initialised)
+	{
+		glDeleteBuffers(1, &vbo);
+		glDeleteBuffers(1, &ibo);
+	}
 	glGenVertexArrays(1, &vao);
 	glGenBuffers(1, &vbo);
 	glBindVertexArray(vao);
@@ -21,7 +27,7 @@ void Mesh::Load(std::vector<Vertex> vertices, std::vector<unsigned int> indices)
 	glEnableVertexAttribArray(1);
 	glGenBuffers(1, &ibo);
 	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, ibo);
-	glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(int) * indices.size(), &indices[0], GL_STATIC_DRAW);
+	glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(unsigned int) * indices.size(), &indices[0], GL_STATIC_DRAW);
 	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0);
 	indexCount = indices.size();
 	initialised = true;

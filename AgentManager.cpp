@@ -2,10 +2,7 @@
 
 AgentManager::AgentManager(int agentCount)
 {
-	//init global agent params
-	agentMaxRotateSpeed = 90.0f;
-	agentMaxSpeed = 10.0f;
-
+	agentsAlive = agentCount;
 	//init agents
 	for (int i = 0; i < agentCount; i++)
 	{
@@ -19,13 +16,12 @@ AgentManager::AgentManager(int agentCount)
 
 AgentManager::~AgentManager() {}
 
-void AgentManager::updateAgents(float frameTime)
+void AgentManager::updateAgents(float frameTime, glm::vec2 nextCircleCentre, float nextCircleRadius)
 {
 	for (auto& agent : agents)
 	{
 		if (agent.alive)
 		{
-			//for now:
 			//1. If there is another living agent in range, fight them
 			bool fighting = false;
 			for (auto& otherAgent : agents)
@@ -34,30 +30,57 @@ void AgentManager::updateAgents(float frameTime)
 				{
 					if (glm::length(agent.pos - otherAgent.pos) < agent.range)
 					{
+						agent.hasTarget = false;	//cancel whatever it was doing before, it's fighting time
 						fighting = true;
 						agentFight(agent, otherAgent, frameTime);
 					}
 				}
 			}
-			//2. If no nearby agent, just wander randomly
+			//2. If no nearby agent, does it have a target?
 			if (!fighting)
 			{
-				//2a. randomly rotate
-				float rot = (float)(rand() % (int)agentMaxRotateSpeed) * frameTime;
-				if (rand() % 2 == 0)
+				if (agent.hasTarget)
 				{
-					agent.look += glm::radians(rot);
+					//2a. Turn and move towards target
+					if (agent.rotateTowards(agent.targetPosition, frameTime))
+					{
+						if (agent.moveTowards(agent.targetPosition, frameTime))
+						{
+							agent.hasTarget = false;	//if the agent reached its goal, it no longer has a target
+						}
+					}
+					
 				}
 				else
 				{
-					agent.look -= glm::radians(rot);
+					//2b. Find a target
+					//Is the agent outside of the next circle?
+					float distanceToNextCircleCentre = glm::length(agent.pos - nextCircleCentre);
+					if (distanceToNextCircleCentre > nextCircleRadius)
+					{
+						float targetDistance = distanceToNextCircleCentre - (0.8f * nextCircleRadius);
+						agent.setTarget(agent.pos + glm::normalize(nextCircleCentre - agent.pos) * targetDistance);
+					}
+					else
+					{
+						//2bi. randomly rotate
+						float rot = (float)(rand() % (int)AGENT_MAX_ROTATE_SPEED) * frameTime;
+						if (rand() % 2 == 0)
+						{
+							agent.look += glm::radians(rot);
+						}
+						else
+						{
+							agent.look -= glm::radians(rot);
+						}
+						//2bii. randomly move
+						float mSpeed = (float)(rand() % (int)AGENT_MAX_SPEED) * frameTime;
+						glm::vec2 forward = agent.forward() * mSpeed;
+						agent.pos = agent.pos + forward;
+					}
+					
 				}
-				//2b. randomly move
-				float mSpeed = (float)(rand() % (int)agentMaxSpeed) * frameTime;
-				glm::vec2 forward = agent.forward() * mSpeed;
-				agent.pos = agent.pos + forward;
 			}
-			
 		}
 	}
 }
@@ -66,34 +89,17 @@ void AgentManager::killAgentsOutsideCircle(glm::vec2 circleCentre, float circleR
 {
 	for (auto& agent : agents)
 	{
-		if (glm::length(agent.pos - circleCentre) > circleRadius)
+		if (glm::length(agent.pos - circleCentre) > circleRadius && agent.alive)
 		{
-			agent.alive = false;
+			killAgent(agent);
 		}
 	}
 }
 
 void AgentManager::agentFight(Agent& agent, Agent& other, float deltaTime)
 {
-	//either rotate towards the other agent, or attack it
-	glm::vec2 target = other.pos - agent.pos;
-	glm::vec2 fwd = agent.forward();
-	float angleBetween = glm::acos(glm::dot(target, fwd) / glm::length(target));	
-	//check which way we actually have to rotate
-	float side = (fwd.x * target.y) - (fwd.y * target.x);
-
-	//rotate to face target (if possible)
-	float maxRotation = glm::radians(agentMaxRotateSpeed) * deltaTime;
-	//printf("Fwd: %.2f, %.2f || tgt: %.2f, %.2f || Angle: %.2f\n", fwd.x, fwd.y, target.x, target.y, glm::degrees(angleBetween));
-	if (angleBetween > maxRotation)
+	if (agent.rotateTowards(other.pos, deltaTime))
 	{
-		agent.look += maxRotation * (side < 0.0f ? -1.0f : 1.0f); //if forward vector is left of target vector -> rotate clockwise
-	}
-	else
-	{
-		//we're close enough to directly face them
-		//so we turn that way and attack
-		agent.look += angleBetween * (side < 0.0f ? -1.0f : 1.0f); //if forward vector is left of target vector -> rotate clockwise
 		agentAttack(agent, other);
 	}
 }
@@ -101,5 +107,22 @@ void AgentManager::agentFight(Agent& agent, Agent& other, float deltaTime)
 void AgentManager::agentAttack(Agent& agent, Agent& other)
 {
 	//for now attacks just instakill targets
-	other.alive = false;
+	killAgent(other);
+}
+
+void AgentManager::killAgent(Agent& agent)
+{
+	if (agent.alive)	//sanity check
+	{
+		agent.alive = false;
+		agentsAlive--;
+		if (agentsAlive != 1)
+		{
+			printf("%i agents remain.\n", agentsAlive);
+		}
+		else
+		{
+			printf("%i agent remains.\n", agentsAlive);
+		}
+	}
 }
