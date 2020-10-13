@@ -54,31 +54,7 @@ void AgentManager::updateAgents(float frameTime, glm::vec2 nextCircleCentre, flo
 				else
 				{
 					//2b. Find a target
-					//Is the agent outside of the next circle?
-					float distanceToNextCircleCentre = glm::length(agent.pos - nextCircleCentre);
-					if (distanceToNextCircleCentre > nextCircleRadius)
-					{
-						float targetDistance = distanceToNextCircleCentre - (0.8f * nextCircleRadius);
-						agent.setTarget(agent.pos + glm::normalize(nextCircleCentre - agent.pos) * targetDistance);
-					}
-					else
-					{
-						//2bi. randomly rotate
-						float rot = (float)(rand() % (int)AGENT_MAX_ROTATE_SPEED) * frameTime;
-						if (rand() % 2 == 0)
-						{
-							agent.look += glm::radians(rot);
-						}
-						else
-						{
-							agent.look -= glm::radians(rot);
-						}
-						//2bii. randomly move
-						float mSpeed = (float)(rand() % (int)AGENT_MAX_SPEED) * frameTime;
-						glm::vec2 forward = agent.forward() * mSpeed;
-						agent.pos = agent.pos + forward;
-					}
-					
+					findTargetForAgent(agent, nextCircleCentre, nextCircleRadius);
 				}
 			}
 		}
@@ -124,5 +100,33 @@ void AgentManager::killAgent(Agent& agent)
 		{
 			printf("%i agent remains.\n", agentsAlive);
 		}
+	}
+}
+
+void AgentManager::findTargetForAgent(Agent& agent, glm::vec2 nextCircleCentre, float nextCircleRadius)
+{
+	float distanceToNextCircleCentre = glm::length(agent.pos - nextCircleCentre);
+	if (distanceToNextCircleCentre > nextCircleRadius)
+	{
+		float targetDistance = distanceToNextCircleCentre - (0.95f * nextCircleRadius);
+		agent.setTarget(agent.pos + glm::normalize(nextCircleCentre - agent.pos) * targetDistance);
+	}
+	else
+	{
+		//agent is in the next circle, just pick a random spot (within the next circle)
+		float rTheta = glm::radians((float)(rand() % 360));
+		float rRad = (float)(rand() % (int)(nextCircleRadius));
+		float rx = glm::cos(rTheta) * rRad;
+		float ry = glm::sin(rTheta) * rRad;
+		glm::vec2 randomSpot = nextCircleCentre + glm::vec2(rx, ry);
+		agent.setTarget(randomSpot);
+	}
+}
+
+void AgentManager::cancelAllAgentTargets()
+{
+	for (auto& agent : agents)
+	{
+		agent.hasTarget = false;
 	}
 }

@@ -35,6 +35,7 @@ Mesh agentMesh, agentTargetingCircleMesh;
 
 Mesh lineMesh;
 std::vector<glm::vec2> linePoints;
+bool showTargetingLines = false;
 
 //circle of death properties
 Mesh circleOfDeathMesh, nextCircleMesh;
@@ -127,6 +128,10 @@ void key_callback(GLFWwindow* window, int key, int scancode, int action, int mod
 	{
 		shouldExit = true;
 	}
+	if (key == GLFW_KEY_T && action == GLFW_PRESS)
+	{
+		showTargetingLines = !showTargetingLines;
+	}
 }
 
 int init_GLFW()
@@ -194,13 +199,15 @@ void init_GL()
 	glViewport(0, 0, width, height);
 }
 
-void computeNewCircle()
+void newCircle()
 {
 	nextCircleRadius = circleRadius / 2.0f;
 	//compute random bearing and distance from current circle centre
 	float angle = glm::radians((float)(rand() % 360));
 	float distance = (float)(rand() % (int)nextCircleRadius);
 	nextCircleCentre = circleCentre + glm::vec2(glm::cos(angle) * distance, glm::sin(angle) * distance);
+	elapsedShrinkTime = 0.0f;
+	manager->cancelAllAgentTargets();
 }
 
 void update(float frameTime)
@@ -218,8 +225,7 @@ void update(float frameTime)
 			circleCentre = nextCircleCentre;
 			previousCircleRadius = circleRadius;
 			previousCircleCentre = circleCentre;
-			computeNewCircle();
-			elapsedShrinkTime = 0.0f;
+			newCircle();
 		}
 		else
 		{
@@ -292,11 +298,14 @@ void draw()
 	}
 
 	//draw target lines
-	for (auto& agent : manager->agents)
+	if (showTargetingLines)
 	{
-		if (agent.hasTarget)
+		for (auto& agent : manager->agents)
 		{
-			drawLine(agent.pos, agent.targetPosition);
+			if (agent.hasTarget)
+			{
+				drawLine(agent.pos, agent.targetPosition);
+			}
 		}
 	}
 
@@ -343,7 +352,7 @@ void generateData()
 {
 	int sTime = (int)time(NULL);
 	manager = new AgentManager(MAX_AGENTS);
-	computeNewCircle();
+	newCircle();
 	int tTime = (int)time(NULL) - sTime;
 	printf("Generation time: %i\n", tTime);
 }
