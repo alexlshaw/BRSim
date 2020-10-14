@@ -12,6 +12,7 @@
 #include <vector>
 #include "AgentManager.h"
 #include "Agent.h"
+#include "Bullet.h"
 #include "CStopWatch.h"
 #include "Mesh.h"
 #include "Settings.h"
@@ -29,6 +30,8 @@ int uBProjMatrix, uBModelMatrix, uTProjMatrix, uTModelMatrix, uTex;
 int uAProj, uAModel;
 GLuint avbo, avao, aibo;
 GLuint tvbo, tvao, tibo;
+
+float timeRate = 1.0f;
 
 AgentManager* manager = nullptr;
 Mesh agentMesh, agentTargetingCircleMesh;
@@ -132,6 +135,18 @@ void key_callback(GLFWwindow* window, int key, int scancode, int action, int mod
 	{
 		showTargetingLines = !showTargetingLines;
 	}
+	if (key == GLFW_KEY_O && action == GLFW_PRESS)
+	{
+		//reduce timestep
+		timeRate -= 1.0f;
+		printf("Decreasing time scale to %i\n", (int)timeRate);
+	}
+	if (key == GLFW_KEY_P && action == GLFW_PRESS)
+	{
+		//increase timestep
+		timeRate += 1.0f;
+		printf("Increasing time scale to %i\n", (int)timeRate);
+	}
 }
 
 int init_GLFW()
@@ -214,6 +229,7 @@ void update(float frameTime)
 {
 	if (manager->agentsAlive > 1)
 	{
+		manager->updateBullets(frameTime);
 		manager->updateAgents(frameTime, nextCircleCentre, nextCircleRadius);
 		manager->killAgentsOutsideCircle(circleCentre, circleRadius);
 		elapsedShrinkTime += frameTime;
@@ -297,6 +313,12 @@ void draw()
 		}
 	}
 
+	//draw bullets
+	for (auto& bullet : manager->bullets)
+	{
+		drawLine(bullet.pos, bullet.pos + (bullet.dir * 2.0f));
+	}
+
 	//draw target lines
 	if (showTargetingLines)
 	{
@@ -374,7 +396,7 @@ int main()
 	{
 		float delta = timer.GetElapsedSeconds();
 		timer.Reset();
-		update(delta);
+		update(delta * timeRate);
 		draw();
 		glfwPollEvents();
 		delta = timer.GetElapsedSeconds() * 1000.0f;

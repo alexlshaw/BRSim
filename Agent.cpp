@@ -1,6 +1,6 @@
 #include "Agent.h"
 
-Agent::Agent(glm::vec2 position, float direction)
+Agent::Agent(glm::vec2 position, float direction, int identity)
 {
 	look = direction;
 	pos = position;
@@ -8,6 +8,8 @@ Agent::Agent(glm::vec2 position, float direction)
 	alive = true;
 	hasTarget = false;
 	targetPosition = position;
+	id = identity;
+	shotCooldownRemainingTime = 0.0f;
 }
 
 Agent::~Agent() {}

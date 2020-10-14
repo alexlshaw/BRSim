@@ -9,7 +9,7 @@ AgentManager::AgentManager(int agentCount)
 		float x = (float)(rand() % 400) + 200.0f;
 		float y = (float)(rand() % 400) + 200.0f;
 		glm::vec2 pos = glm::vec2(x, y);
-		Agent a = Agent(pos, glm::radians((float)(rand() % 360)));
+		Agent a = Agent(pos, glm::radians((float)(rand() % 360)), i);
 		agents.push_back(a);
 	}
 }
@@ -22,6 +22,9 @@ void AgentManager::updateAgents(float frameTime, glm::vec2 nextCircleCentre, flo
 	{
 		if (agent.alive)
 		{
+			//progress cooldowns
+			agent.shotCooldownRemainingTime = glm::max<float>(0.0f, agent.shotCooldownRemainingTime - frameTime);
+
 			//1. If there is another living agent in range, fight them
 			bool fighting = false;
 			for (auto& otherAgent : agents)
@@ -61,6 +64,65 @@ void AgentManager::updateAgents(float frameTime, glm::vec2 nextCircleCentre, flo
 	}
 }
 
+void AgentManager::updateBullets(float frameTime)
+{
+	//Seems like at the moment, agents might be being instakilled by their own bullets?
+	for (auto& bullet : bullets)
+	{
+		float minHitT = 99999.0f;
+		int hitAgentIdx = -1;
+		for (unsigned int j = 0; j < agents.size(); j++)
+		{
+			if (agents[j].alive)
+			{
+				float t = checkCollision(bullet, agents[j], frameTime);
+				if (t != 0.0f && t < minHitT)
+				{
+					minHitT = t;
+					hitAgentIdx = j;
+				}
+			}
+		}
+		//if we ended up hitting an agent, kill it
+		if (hitAgentIdx != -1)
+		{
+			printf("Agent %i hit by shot fired by agent %i\n", agents[hitAgentIdx].id, bullet.ownerID);
+			killAgent(agents[hitAgentIdx]);
+			bullet.hitTarget = true;
+		}
+		bullet.life -= frameTime;
+		bullet.pos += bullet.dir * frameTime * BULLET_SPEED;
+	}
+	auto it = std::remove_if(bullets.begin(), bullets.end(), [](Bullet& x) { return x.life <= 0.0f || x.hitTarget; });
+	bullets.erase(it, bullets.end());
+}
+
+//it seems bullets are behaving more like laser beams right now
+float AgentManager::checkCollision(Bullet& bullet, Agent& agent, float frameTime)
+{
+	glm::vec2 endPos = bullet.pos + bullet.dir * frameTime * BULLET_SPEED;
+	glm::vec2 trajectory = endPos - bullet.pos;
+	glm::vec2 AC = agent.pos - bullet.pos;
+	//project AC onto trajectory
+	float pt = glm::dot(trajectory, AC) / glm::length(trajectory);
+	//make sure the target is actually along the section of the trajectory line that the bullet will travel in this frame
+	if (pt < 0.0f || pt > glm::length(trajectory))
+	{
+		return false;
+	}
+	glm::vec2 closestPoint = bullet.pos + pt * glm::normalize(trajectory);
+	if (glm::length(agent.pos - closestPoint) < AGENT_COLLISION_RADIUS)
+	{
+		if (bullet.ownerID == agent.id)
+		{
+			printf("Stop hitting yourself\n");
+		}
+		//it's a hit
+		return pt;
+	}
+	return 0.0f;
+}
+
 void AgentManager::killAgentsOutsideCircle(glm::vec2 circleCentre, float circleRadius)
 {
 	for (auto& agent : agents)
@@ -82,8 +144,12 @@ void AgentManager::agentFight(Agent& agent, Agent& other, float deltaTime)
 
 void AgentManager::agentAttack(Agent& agent, Agent& other)
 {
-	//for now attacks just instakill targets
-	killAgent(other);
+	if (agent.shotCooldownRemainingTime <= 0.0f)
+	{
+		bullets.push_back(Bullet(agent.pos + 3.0f * agent.forward(), agent.forward(), 2.0f, agent.id));
+		agent.shotCooldownRemainingTime = AGENT_SHOT_COOLDOWN;
+	}
+	
 }
 
 void AgentManager::killAgent(Agent& agent)

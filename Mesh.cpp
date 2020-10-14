@@ -2,6 +2,9 @@
 
 Mesh::Mesh()
 {
+	vbo = -1;
+	ibo = -1;
+	vao = -1;
 	initialised = false;
 	indexCount = 0;
 }
