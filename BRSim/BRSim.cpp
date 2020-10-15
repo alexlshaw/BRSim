@@ -23,6 +23,15 @@ GLFWwindow* mainWindow = nullptr;
 bool shouldExit = false;
 int screenWidth = 1024, screenHeight = 1024;
 
+//variables for manipulating viewport and simulation
+glm::vec2 windowOffset = glm::vec2(0.0f, 0.0f);
+glm::vec2 windowOffsetAtPanStart = windowOffset;
+bool panning = false;
+glm::vec2 mouseClickStartLoc;
+float zoomLevel = 1.0f;
+float timeRate = 1.0f;
+
+
 Shader* basic = nullptr;
 Shader* texturedUnlit = nullptr;
 Shader* agentShader = nullptr;
@@ -31,13 +40,13 @@ int uAProj, uAModel;
 GLuint avbo, avao, aibo;
 GLuint tvbo, tvao, tibo;
 
-float timeRate = 1.0f;
+
 
 AgentManager* manager = nullptr;
 Mesh agentMesh, agentTargetingCircleMesh;
 
 Mesh lineMesh;
-std::vector<glm::vec2> linePoints;
+std::vector<Vertex> linePoints;
 bool showTargetingLines = false;
 
 //circle of death properties
@@ -52,11 +61,6 @@ float elapsedShrinkTime = 0.0f;
 
 void buildMeshes()
 {
-	glm::vec4 white = glm::vec4(1.0f, 1.0f, 1.0f, 1.0f);
-	glm::vec4 black = glm::vec4(0.0f, 0.0f, 0.0f, 1.0f);
-	glm::vec4 red = glm::vec4(1.0f, 0.0f, 0.0f, 1.0f);
-	glm::vec4 blue = glm::vec4(0.0f, 0.0f, 1.0f, 0.35f);
-	glm::vec4 green = glm::vec4(0.0f, 1.0f, 0.0f, 1.0f);
 	std::vector<Vertex> vertices;
 	vertices.push_back(Vertex(glm::vec4(16.0f, 0.0f, 0.0f, 1.0f), black));
 	vertices.push_back(Vertex(glm::vec4(0.0f, 4.0f, 0.0f, 1.0f), black));
@@ -92,10 +96,10 @@ void buildMeshes()
 		glm::vec4 p2 = glm::vec4(glm::cos(angle2), glm::sin(angle2), 0.0f, 1.0f);
 		glm::vec4 p3 = glm::vec4(p1.x * 50.0f, p1.y * 50.0f, 0.0f, 1.0f);
 		glm::vec4 p4 = glm::vec4(p2.x * 50.0f, p2.y * 50.0f, 0.0f, 1.0f);
-		vertices.push_back(Vertex(p1, blue));	//i * 4
-		vertices.push_back(Vertex(p2, blue));
-		vertices.push_back(Vertex(p3, blue));	
-		vertices.push_back(Vertex(p4, blue));
+		vertices.push_back(Vertex(p1, translucentBlue));	//i * 4
+		vertices.push_back(Vertex(p2, translucentBlue));
+		vertices.push_back(Vertex(p3, translucentBlue));	
+		vertices.push_back(Vertex(p4, translucentBlue));
 		//tri 1 (p1->p4->p2)
 		indices.push_back(i * 4);
 		indices.push_back(i * 4 + 3);
@@ -114,7 +118,7 @@ void buildMeshes()
 	{
 		float angle = glm::radians((360.0f / (float)sides) * (float)i);
 		glm::vec4 p = glm::vec4(glm::cos(angle), glm::sin(angle), 0.0f, 1.0f);
-		vertices.push_back(Vertex(p, blue));
+		vertices.push_back(Vertex(p, translucentBlue));
 		indices.push_back(i);
 	}
 	nextCircleMesh.Load(vertices, indices);
@@ -149,6 +153,36 @@ void key_callback(GLFWwindow* window, int key, int scancode, int action, int mod
 	}
 }
 
+void mouse_button_callback(GLFWwindow* window, int button, int action, int mods)
+{
+	double xpos, ypos;
+	glfwGetCursorPos(window, &xpos, &ypos);
+	if (button == GLFW_MOUSE_BUTTON_RIGHT && action == GLFW_PRESS)
+	{
+		mouseClickStartLoc = glm::vec2(xpos, ypos);
+		windowOffsetAtPanStart = windowOffset;
+		panning = true;
+	}
+	else if (button == GLFW_MOUSE_BUTTON_RIGHT && action == GLFW_RELEASE)
+	{
+		panning = false;
+	}
+}
+
+void scroll_callback(GLFWwindow* window, double xoffset, double yoffset)
+{
+	//mousewheel only gives y offsets (integral values, 1 per mouse-wheel-click per frame it seems, up is +ve, down -ve)
+	if (yoffset > 0.0f)
+	{
+		zoomLevel *= 2.0f;
+	}
+	else if (yoffset < 0.0f)
+	{
+		zoomLevel *= 0.5f;
+	}
+	printf("Zooming to: %.2f\n", zoomLevel);
+}
+
 int init_GLFW()
 {
 	glfwSetErrorCallback(error_callback);
@@ -169,6 +203,8 @@ int init_GLFW()
 	glfwMakeContextCurrent(mainWindow);
 	//input handlers
 	glfwSetKeyCallback(mainWindow, key_callback);
+	glfwSetMouseButtonCallback(mainWindow, mouse_button_callback);
+	glfwSetScrollCallback(mainWindow, scroll_callback);
 	//glfwSetCursorPosCallback(mainWindow, cursor_position_callback);
 	//set up glad
 	if (!gladLoadGLLoader((GLADloadproc)glfwGetProcAddress))
@@ -227,6 +263,16 @@ void newCircle()
 
 void update(float frameTime)
 {
+	//update moust control of screen position
+	if (panning)
+	{
+		double xpos, ypos;
+		glfwGetCursorPos(mainWindow, &xpos, &ypos);
+		glm::vec2 mouseEndLoc = glm::vec2(xpos, ypos);
+		glm::vec2 delta = (mouseEndLoc - mouseClickStartLoc) / zoomLevel;
+		windowOffset = windowOffsetAtPanStart + glm::vec2(-delta.x, delta.y);
+	}
+	//update simulation state
 	if (manager->agentsAlive > 1)
 	{
 		manager->updateBullets(frameTime);
@@ -252,10 +298,10 @@ void update(float frameTime)
 }
 
 //this function doesn't actually draw a line, it just adds the line data to the batch to be drawn later
-void drawLine(glm::vec2 start, glm::vec2 end)
+void drawLine(glm::vec2 start, glm::vec2 end, glm::vec4 colour)
 {
-	linePoints.push_back(start);
-	linePoints.push_back(end);
+	linePoints.push_back(Vertex(glm::vec4(start.x, start.y, 0.0f, 1.0f), colour));
+	linePoints.push_back(Vertex(glm::vec4(end.x, end.y, 0.0f, 1.0f), colour));
 }
 
 //this function takes the accumulated line data, and sends it off to the GPU to be drawn
@@ -263,27 +309,40 @@ void drawLines()
 {
 	if (linePoints.size() > 0)
 	{
-		std::vector<Vertex> vertices;
 		std::vector<unsigned int> indices;
 		for (unsigned int i = 0; i < linePoints.size(); i++)
 		{
-			vertices.push_back(Vertex(glm::vec4(linePoints[i].x, linePoints[i].y, 0.0f, 1.0f), glm::vec4(0.0f, 1.0f, 0.0f, 1.0f)));
 			indices.push_back(i);
 		}
-		lineMesh.Load(vertices, indices);
+		lineMesh.Load(linePoints, indices);
 		basic->setUniform(uBModelMatrix, glm::identity<glm::mat4>());
 		lineMesh.draw(GL_LINES);
 	}
+}
+
+glm::mat4 computeProjection()
+{
+	float viewWidth = screenWidth / (zoomLevel * 2.0f);
+	float viewHeight = screenHeight / (zoomLevel * 2.0f);
+
+	float centreX = (screenWidth / 2.0f) + windowOffset.x;
+	float centreY = (screenHeight / 2.0f) + windowOffset.y;
+
+	float left = centreX - viewWidth;
+	float right = centreX + viewWidth;
+	float bottom = centreY - viewHeight;
+	float top = centreY + viewHeight;
+	glm::mat4 projection = glm::ortho(left, right, bottom, top, -1.0f, 1.0f);
+	return projection;
 }
 
 void draw()
 {
 	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 	linePoints.clear();
-	glm::mat4 projection = glm::ortho(0.0f, (float)screenWidth, 0.0f, (float)screenHeight, -1.0f, 1.0f);
 
 	basic->use();
-	basic->setUniform(uBProjMatrix, projection);
+	basic->setUniform(uBProjMatrix, computeProjection());
 
 	for (auto& agent : manager->agents)
 	{
@@ -316,7 +375,7 @@ void draw()
 	//draw bullets
 	for (auto& bullet : manager->bullets)
 	{
-		drawLine(bullet.pos, bullet.pos + (bullet.dir * 2.0f));
+		drawLine(bullet.pos, bullet.pos + (bullet.dir * 2.0f), black);
 	}
 
 	//draw target lines
@@ -326,7 +385,7 @@ void draw()
 		{
 			if (agent.hasTarget)
 			{
-				drawLine(agent.pos, agent.targetPosition);
+				drawLine(agent.pos, agent.targetPosition, green);
 			}
 		}
 	}
