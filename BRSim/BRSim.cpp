@@ -14,6 +14,7 @@
 #include "Agent.h"
 #include "Bullet.h"
 #include "CStopWatch.h"
+#include "Level.h"
 #include "Mesh.h"
 #include "Settings.h"
 #include "Shader.h"
@@ -40,8 +41,7 @@ int uAProj, uAModel;
 GLuint avbo, avao, aibo;
 GLuint tvbo, tvao, tibo;
 
-
-
+Level* level = nullptr;
 AgentManager* manager = nullptr;
 Mesh agentMesh, agentTargetingCircleMesh;
 
@@ -51,12 +51,8 @@ bool showTargetingLines = false;
 
 //circle of death properties
 Mesh circleOfDeathMesh, nextCircleMesh;
-glm::vec2 circleCentre = glm::vec2(512.0f, 512.0f);
-float circleRadius = INITIAL_CIRCLE_RADIUS;
-float previousCircleRadius = circleRadius;
-float nextCircleRadius;
-glm::vec2 nextCircleCentre;
-glm::vec2 previousCircleCentre = circleCentre;
+glm::vec2 circleCentre, nextCircleCentre, previousCircleCentre;
+float circleRadius, previousCircleRadius, nextCircleRadius;
 float elapsedShrinkTime = 0.0f;
 
 void buildMeshes()
@@ -340,9 +336,17 @@ void draw()
 {
 	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 	linePoints.clear();
+	glm::mat4 projection = computeProjection();
+
+	//first draw the level
+	texturedUnlit->use();
+	texturedUnlit->setUniform(uTProjMatrix, projection);
+	//texturedUnlit->setUniform(uTModelMatrix, glm::identity<mat4>());
+	texturedUnlit->setUniform(uTex, 0);
+	level->draw(texturedUnlit, uTModelMatrix);
 
 	basic->use();
-	basic->setUniform(uBProjMatrix, computeProjection());
+	basic->setUniform(uBProjMatrix, projection);
 
 	for (auto& agent : manager->agents)
 	{
@@ -404,7 +408,14 @@ void draw()
 	basic->setUniform(uBModelMatrix, modelview);
 	nextCircleMesh.draw(GL_LINE_LOOP);
 
+	//draw level boundary
+	drawLine(glm::vec2(0.0f, 0.0f), glm::vec2(0.0f, level->levelHeight), black);
+	drawLine(glm::vec2(0.0f, 0.0f), glm::vec2(level->levelWidth, 0.0f), black);
+	drawLine(glm::vec2(level->levelWidth, level->levelHeight), glm::vec2(0.0f, level->levelHeight), black);
+	drawLine(glm::vec2(level->levelWidth, level->levelHeight), glm::vec2(level->levelWidth, 0.0f), black);
+
 	drawLines();
+
 
 	glfwSwapBuffers(mainWindow);
 }
@@ -426,13 +437,24 @@ void exit()
 		delete manager;
 		manager = nullptr;
 	}
+	if (level != nullptr)
+	{
+		delete level;
+		level = nullptr;
+	}
 	glfwTerminate();
 }
 
 void generateData()
 {
 	int sTime = (int)time(NULL);
+	level = new Level(2, 2, 1024);
 	manager = new AgentManager(MAX_AGENTS);
+	manager->spawnAgents(level);
+	circleCentre = glm::vec2(level->levelWidth / 2.0f, level->levelHeight / 2.0f);
+	circleRadius = glm::max<float>(level->levelWidth, level->levelHeight) * 1.5f;
+	previousCircleRadius = circleRadius;
+	previousCircleCentre = circleCentre;
 	newCircle();
 	int tTime = (int)time(NULL) - sTime;
 	printf("Generation time: %i\n", tTime);

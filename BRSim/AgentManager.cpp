@@ -3,15 +3,6 @@
 AgentManager::AgentManager(int agentCount)
 {
 	agentsAlive = agentCount;
-	//init agents
-	for (int i = 0; i < agentCount; i++)
-	{
-		float x = (float)(rand() % 400) + 200.0f;
-		float y = (float)(rand() % 400) + 200.0f;
-		glm::vec2 pos = glm::vec2(x, y);
-		Agent a = Agent(pos, glm::radians((float)(rand() % 360)), i);
-		agents.push_back(a);
-	}
 }
 
 AgentManager::~AgentManager() {}
@@ -121,6 +112,18 @@ float AgentManager::checkCollision(Bullet& bullet, Agent& agent, float frameTime
 		return pt;
 	}
 	return 0.0f;
+}
+
+void AgentManager::spawnAgents(Level* levelData)
+{
+	for (int i = 0; i < agentsAlive; i++)
+	{
+		float x = (float)(rand() % (int)levelData->levelWidth);
+		float y = (float)(rand() % (int)levelData->levelHeight);
+		glm::vec2 pos = glm::vec2(x, y);
+		Agent a = Agent(pos, glm::radians((float)(rand() % 360)), i);
+		agents.push_back(a);
+	}
 }
 
 void AgentManager::killAgentsOutsideCircle(glm::vec2 circleCentre, float circleRadius)

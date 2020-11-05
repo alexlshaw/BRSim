@@ -4,6 +4,7 @@
 #include <vector>
 #include "Agent.h"
 #include "Bullet.h"
+#include "Level.h"
 #include "glm/glm.hpp"
 #include "glm\gtx\transform.hpp" 
 
@@ -20,6 +21,7 @@ public:
 	int agentsAlive;
 	std::vector<Bullet> bullets;
 	float checkCollision(Bullet& bullet, Agent& agent, float frameTime);
+	void spawnAgents(Level* levelData);
 private:
 	void agentFight(Agent& agent, Agent& other, float deltaTime);
 	void agentAttack(Agent& agent, Agent& other);

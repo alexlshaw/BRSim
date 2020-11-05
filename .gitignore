@@ -3,6 +3,13 @@
 ##
 ## Get latest from https://github.com/github/gitignore/blob/master/VisualStudio.gitignore
 
+#project specific ignores
+
+#Ignore leveldata for now (large files that are changing frequently and not representative of final data)
+Level/
+
+#standard ignores below this point
+
 # User-specific files
 *.rsuser
 *.suo

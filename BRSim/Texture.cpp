@@ -7,7 +7,7 @@ Texture::Texture()
 
 Texture::Texture(const char* fileName)
 {
-	load(fileName);
+	loadFromTGA(fileName);
 }
 
 Texture::~Texture()
@@ -15,7 +15,7 @@ Texture::~Texture()
 	glDeleteTextures(1, &textureIndex);
 }
 
-void Texture::load(const char* fileName)
+void Texture::loadFromTGA(const char* fileName)
 {
 	GLbyte* pBits;
 	int nWidth, nHeight, nComponents;
@@ -147,4 +147,32 @@ GLbyte* readTGABits(const char* szFileName, GLint* iWidth, GLint* iHeight, GLint
 
 	// Return pointer to image data
 	return pBits;
+}
+
+void Texture::loadFromPNG(const char* fileName)
+{
+	std::vector<unsigned char> image;
+	unsigned int width, height;
+	unsigned int error = lodepng::decode(image, width, height, fileName);
+
+	//vertically flip the image
+	std::vector<unsigned char> flippedImage;
+	flippedImage.resize(image.size());
+	//lodepng loads image data vertically flipped wrt openGL ordering so flip it
+	for (unsigned int x = 0; x < width * 4; x++)
+	{
+		for (unsigned int y = 0; y < height; y++)
+		{
+			unsigned int inputLoc = x + (width * y * 4);
+			unsigned int outputLoc = x + (width * (height - y - 1) * 4);
+			flippedImage[outputLoc] = image[inputLoc];
+		}
+	}
+
+
+	if (error != 0)
+	{
+		printf("Error loading texture: %s\n", fileName);
+	}
+	loadFromPixels(flippedImage, width, height);
 }

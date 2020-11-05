@@ -3,6 +3,7 @@
 #include "glad/glad.h"
 #include <cstdlib>
 #include <vector>
+#include "lodepng.h"
 
 GLbyte* readTGABits(const char* szFileName, GLint* iWidth, GLint* iHeight, GLint* iComponents, GLenum* eFormat, GLbyte* pData = nullptr);
 
@@ -33,7 +34,8 @@ public:
 	Texture();
 	Texture(const char* filename);
 	~Texture();
-	void load(const char* fileName);
+	void loadFromTGA(const char* fileName);
 	void loadFromPixels(std::vector<GLubyte> pixels, int width, int height);	//4 elements in array define a pixel in rgba format
+	void loadFromPNG(const char* fileName);
 	void use();
 };

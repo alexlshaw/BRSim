@@ -11,28 +11,44 @@ Mesh::Mesh()
 
 void Mesh::Load(std::vector<Vertex> vertices, std::vector<unsigned int> indices)
 {
+	initialiseMesh();
+	glBindVertexArray(vao);
+	glBindBuffer(GL_ARRAY_BUFFER, vbo);
+	glBufferData(GL_ARRAY_BUFFER, sizeof(Vertex) * vertices.size(), &vertices[0], GL_STATIC_DRAW);
+	Vertex::setAttribs();
+	glGenBuffers(1, &ibo);
+	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, ibo);
+	glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(unsigned int) * indices.size(), &indices[0], GL_STATIC_DRAW);
+	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0);
+	indexCount = (GLsizei)indices.size();
+	
+}
+
+void Mesh::Load(std::vector<TVertex> vertices, std::vector<unsigned int> indices)
+{
+	initialiseMesh();
+	glBindVertexArray(vao);
+	glBindBuffer(GL_ARRAY_BUFFER, vbo);
+	glBufferData(GL_ARRAY_BUFFER, sizeof(TVertex) * vertices.size(), &vertices[0], GL_STATIC_DRAW);
+	TVertex::setAttribs();
+	glGenBuffers(1, &ibo);
+	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, ibo);
+	glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(unsigned int) * indices.size(), &indices[0], GL_STATIC_DRAW);
+	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0);
+	indexCount = (GLsizei)indices.size();
+}
+
+void Mesh::initialiseMesh()
+{
 	//if we already had data in this mesh, clear it out
 	if (initialised)
 	{
 		glDeleteBuffers(1, &vbo);
 		glDeleteBuffers(1, &ibo);
+		//TODO: Check whether I also need to delete the array (or can avoid regenerating the array, etc)
 	}
 	glGenVertexArrays(1, &vao);
 	glGenBuffers(1, &vbo);
-	glBindVertexArray(vao);
-	glBindBuffer(GL_ARRAY_BUFFER, vbo);
-	glBufferData(GL_ARRAY_BUFFER, sizeof(Vertex) * vertices.size(), &vertices[0], GL_STATIC_DRAW);
-	//position
-	glVertexAttribPointer(0, 4, GL_FLOAT, GL_FALSE, sizeof(Vertex), (const GLvoid*)0);
-	glEnableVertexAttribArray(0);
-	//color
-	glVertexAttribPointer(1, 4, GL_FLOAT, GL_FALSE, sizeof(Vertex), (const GLvoid*)16);
-	glEnableVertexAttribArray(1);
-	glGenBuffers(1, &ibo);
-	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, ibo);
-	glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(unsigned int) * indices.size(), &indices[0], GL_STATIC_DRAW);
-	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0);
-	indexCount = indices.size();
 	initialised = true;
 }
 

@@ -4,7 +4,7 @@
 
 const int MAX_AGENTS = 20;					//default 20
 const float AGENT_DEFAULT_RANGE = 60.0f;	//default 30
-const float INITIAL_CIRCLE_RADIUS = 800.0f;	//default 800;
+//const float INITIAL_CIRCLE_RADIUS = 800.0f;	//default 800;
 const float CIRCLE_SHRINK_TIME = 20.0f;		//default 20
 
 const float AGENT_MAX_ROTATE_SPEED = 90.0f;
