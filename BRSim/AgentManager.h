@@ -11,7 +11,7 @@
 class AgentManager
 {
 public:
-	AgentManager(int agentCount);
+	AgentManager(int agentCount, Level& level);
 	~AgentManager();
 	std::vector<Agent> agents;
 	void updateAgents(float frameTime, glm::vec2 nextCircleCentre, float nextCircleRadius);
@@ -21,10 +21,11 @@ public:
 	int agentsAlive;
 	std::vector<Bullet> bullets;
 	float checkCollision(Bullet& bullet, Agent& agent, float frameTime);
-	void spawnAgents(Level* levelData);
+	void spawnAgents();
 private:
 	void agentFight(Agent& agent, Agent& other, float deltaTime);
 	void agentAttack(Agent& agent, Agent& other);
 	void killAgent(Agent& agent);
 	void findTargetForAgent(Agent& agent, glm::vec2 nextCircleCentre, float nextCircleRadius);
+	Level& levelData;
 };

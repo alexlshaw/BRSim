@@ -20,6 +20,7 @@
 #include "Shader.h"
 #include "Vertex.h"
 
+//Window control variables
 GLFWwindow* mainWindow = nullptr;
 bool shouldExit = false;
 int screenWidth = 1024, screenHeight = 1024;
@@ -32,7 +33,7 @@ glm::vec2 mouseClickStartLoc;
 float zoomLevel = 1.0f;
 float timeRate = 1.0f;
 
-
+//Variables for the basic graphics stuff
 Shader* basic = nullptr;
 Shader* texturedUnlit = nullptr;
 Shader* agentShader = nullptr;
@@ -42,6 +43,7 @@ GLuint avbo, avao, aibo;
 GLuint tvbo, tvao, tibo;
 
 Level* level = nullptr;
+bool showLevelWalkData = false;
 AgentManager* manager = nullptr;
 Mesh agentMesh, agentTargetingCircleMesh;
 
@@ -134,6 +136,10 @@ void key_callback(GLFWwindow* window, int key, int scancode, int action, int mod
 	if (key == GLFW_KEY_T && action == GLFW_PRESS)
 	{
 		showTargetingLines = !showTargetingLines;
+	}
+	if (key == GLFW_KEY_W && action == GLFW_PRESS)
+	{
+		showLevelWalkData = !showLevelWalkData;
 	}
 	if (key == GLFW_KEY_O && action == GLFW_PRESS)
 	{
@@ -343,7 +349,7 @@ void draw()
 	texturedUnlit->setUniform(uTProjMatrix, projection);
 	//texturedUnlit->setUniform(uTModelMatrix, glm::identity<mat4>());
 	texturedUnlit->setUniform(uTex, 0);
-	level->draw(texturedUnlit, uTModelMatrix);
+	level->draw(texturedUnlit, uTModelMatrix, showLevelWalkData);
 
 	basic->use();
 	basic->setUniform(uBProjMatrix, projection);
@@ -409,10 +415,10 @@ void draw()
 	nextCircleMesh.draw(GL_LINE_LOOP);
 
 	//draw level boundary
-	drawLine(glm::vec2(0.0f, 0.0f), glm::vec2(0.0f, level->levelHeight), black);
-	drawLine(glm::vec2(0.0f, 0.0f), glm::vec2(level->levelWidth, 0.0f), black);
-	drawLine(glm::vec2(level->levelWidth, level->levelHeight), glm::vec2(0.0f, level->levelHeight), black);
-	drawLine(glm::vec2(level->levelWidth, level->levelHeight), glm::vec2(level->levelWidth, 0.0f), black);
+	drawLine(glm::vec2(0.0f, 0.0f), glm::vec2(0.0f, level->height), black);
+	drawLine(glm::vec2(0.0f, 0.0f), glm::vec2(level->width, 0.0f), black);
+	drawLine(glm::vec2(level->width, level->height), glm::vec2(0.0f, level->height), black);
+	drawLine(glm::vec2(level->width, level->height), glm::vec2(level->width, 0.0f), black);
 
 	drawLines();
 
@@ -447,17 +453,20 @@ void exit()
 
 void generateData()
 {
-	int sTime = (int)time(NULL);
-	level = new Level(2, 2, 1024);
-	manager = new AgentManager(MAX_AGENTS);
-	manager->spawnAgents(level);
-	circleCentre = glm::vec2(level->levelWidth / 2.0f, level->levelHeight / 2.0f);
-	circleRadius = glm::max<float>(level->levelWidth, level->levelHeight) * 1.5f;
+	int startTime = (int)time(NULL);
+	level = new Level(2048, 2048, "sanhok");
+	int levelTime = (int)time(NULL);
+	printf("Level loaded in %i seconds\n", levelTime - startTime);
+	manager = new AgentManager(MAX_AGENTS, *level);
+	manager->spawnAgents();
+	printf("Agents loaded in %i seconds\n", ((int)time(NULL) - levelTime));
+	circleCentre = glm::vec2(level->width / 2.0f, level->height / 2.0f);
+	circleRadius = glm::max<float>(level->width, level->height) * 1.5f;
 	previousCircleRadius = circleRadius;
 	previousCircleCentre = circleCentre;
 	newCircle();
-	int tTime = (int)time(NULL) - sTime;
-	printf("Generation time: %i\n", tTime);
+	int totalTime = (int)time(NULL) - startTime;
+	printf("Total time: %i\n", totalTime);
 }
 
 int main()
@@ -484,7 +493,10 @@ int main()
 		if (delta < 16.6f)	//cap framerate at ~60fps
 		{
 			long sleep = (long)(16.6f - delta);
-			std::this_thread::sleep_for(std::chrono::milliseconds(sleep));
+			if (sleep > 0l)	//0L, not 01
+			{
+				std::this_thread::sleep_for(std::chrono::milliseconds(sleep));
+			}
 		}
 	}
 	exit();

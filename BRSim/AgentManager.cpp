@@ -1,6 +1,7 @@
 #include "AgentManager.h"
 
-AgentManager::AgentManager(int agentCount)
+AgentManager::AgentManager(int agentCount, Level& level) 
+	: levelData(level)
 {
 	agentsAlive = agentCount;
 }
@@ -114,13 +115,19 @@ float AgentManager::checkCollision(Bullet& bullet, Agent& agent, float frameTime
 	return 0.0f;
 }
 
-void AgentManager::spawnAgents(Level* levelData)
+void AgentManager::spawnAgents()
 {
 	for (int i = 0; i < agentsAlive; i++)
 	{
-		float x = (float)(rand() % (int)levelData->levelWidth);
-		float y = (float)(rand() % (int)levelData->levelHeight);
-		glm::vec2 pos = glm::vec2(x, y);
+		bool valid = false;
+		glm::vec2 pos = glm::vec2();
+		while (!valid)
+		{
+			float x = (float)(rand() % (int)levelData.width);
+			float y = (float)(rand() % (int)levelData.height);
+			pos = glm::vec2(x, y);
+			valid = levelData.getLevelInfo(x, y).walkable;
+		}
 		Agent a = Agent(pos, glm::radians((float)(rand() % 360)), i);
 		agents.push_back(a);
 	}
@@ -188,6 +195,9 @@ void AgentManager::findTargetForAgent(Agent& agent, glm::vec2 nextCircleCentre, 
 		float rx = glm::cos(rTheta) * rRad;
 		float ry = glm::sin(rTheta) * rRad;
 		glm::vec2 randomSpot = nextCircleCentre + glm::vec2(rx, ry);
+		//make sure the spot in question is actually within the level
+		randomSpot.x = glm::clamp(randomSpot.x, 0.0f, (float)levelData.width);
+		randomSpot.y = glm::clamp(randomSpot.y, 0.0f, (float)levelData.height);
 		agent.setTarget(randomSpot);
 	}
 }
