@@ -12,3 +12,11 @@
  W: Show level walkability data
  O: Decrease time scale
  P: Increase time scale
+ 
+ 
+##Ack
+
+GLFW
+GLM
+lodepng
+Currently using PUBG overhead map for level data
