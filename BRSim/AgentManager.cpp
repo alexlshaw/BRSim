@@ -8,8 +8,9 @@ AgentManager::AgentManager(int agentCount, Level& level)
 
 AgentManager::~AgentManager() {}
 
-void AgentManager::updateAgents(float frameTime, glm::vec2 nextCircleCentre, float nextCircleRadius)
+void AgentManager::updateAgents(float frameTime, Game* gameState)
 {
+	killAgentsOutsideCircle(gameState);
 	for (auto& agent : agents)
 	{
 		if (agent.alive)
@@ -31,11 +32,19 @@ void AgentManager::updateAgents(float frameTime, glm::vec2 nextCircleCentre, flo
 					}
 				}
 			}
-			//2. If no nearby agent, does it have a target?
+			//2. If no nearby agent, is its target destination satisfactory??
 			if (!fighting)
 			{
 				if (agent.hasTarget)
 				{
+					//check if it's still good
+					if (!gameState->isPositionInsideNextCircle(agent.targetPosition))
+					{
+						//if not, cancel it and find a new one
+						agent.hasTarget = false;
+						findTargetForAgent(agent, gameState->nextCircleCentre, gameState->nextCircleRadius);
+					}
+
 					//2a. Turn and move towards target
 					if (agent.rotateTowards(agent.targetPosition, frameTime))
 					{
@@ -49,7 +58,7 @@ void AgentManager::updateAgents(float frameTime, glm::vec2 nextCircleCentre, flo
 				else
 				{
 					//2b. Find a target
-					findTargetForAgent(agent, nextCircleCentre, nextCircleRadius);
+					findTargetForAgent(agent, gameState->nextCircleCentre, gameState->nextCircleRadius);
 				}
 			}
 		}
@@ -133,11 +142,11 @@ void AgentManager::spawnAgents()
 	}
 }
 
-void AgentManager::killAgentsOutsideCircle(glm::vec2 circleCentre, float circleRadius)
+void AgentManager::killAgentsOutsideCircle(Game* gameState)
 {
 	for (auto& agent : agents)
 	{
-		if (glm::length(agent.pos - circleCentre) > circleRadius && agent.alive)
+		if (glm::length(agent.pos - gameState->circleCentre) > gameState->circleRadius && agent.alive)
 		{
 			killAgent(agent);
 		}

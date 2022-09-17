@@ -156,6 +156,7 @@
     <ClCompile Include="Agent.cpp" />
     <ClCompile Include="AgentManager.cpp" />
     <ClCompile Include="Bullet.cpp" />
+    <ClCompile Include="Game.cpp" />
     <ClCompile Include="glad.c" />
     <ClCompile Include="BRSim.cpp" />
     <ClCompile Include="Level.cpp" />
@@ -177,6 +178,7 @@
     <ClInclude Include="AgentManager.h" />
     <ClInclude Include="Bullet.h" />
     <ClInclude Include="CStopWatch.h" />
+    <ClInclude Include="Game.h" />
     <ClInclude Include="Level.h" />
     <ClInclude Include="Mesh.h" />
     <ClInclude Include="Settings.h" />
