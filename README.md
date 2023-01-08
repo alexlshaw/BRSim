@@ -26,4 +26,5 @@ GLM
 
 lodepng
 
-Currently using PUBG overhead map for level data
+Currently using PUBG overhead map for level data (so these files are not in the repo).
+You can use any appropriately sized image for the level visualisation, and a corresponding B/W image for the walkability map.
