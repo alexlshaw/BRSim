@@ -1,10 +1,11 @@
 #include "Game.h"
 
-Game::Game(int levelWidth, int levelHeight)
+Game::Game(Level& level)
+	: levelData(level)
 {
 	buildCircleMeshes();
-	circleCentre = glm::vec2(levelWidth / 2.0f, levelHeight / 2.0f);
-	circleRadius = glm::max<float>(levelWidth, levelHeight) * 1.5f;
+	circleCentre = glm::vec2(level.width / 2.0f, level.height / 2.0f);
+	circleRadius = glm::max<float>(level.width, level.height) * 1.5f;
 	previousCircleRadius = circleRadius;
 	previousCircleCentre = circleCentre;
 	newCircle();

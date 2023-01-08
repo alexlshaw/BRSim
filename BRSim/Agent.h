@@ -1,6 +1,9 @@
 #pragma once
 
 #include "glm/glm.hpp"
+#include "AIState.h"
+#include "AIStateWandering.h"
+#include "Game.h"
 #include "Settings.h"
 
 class Agent
@@ -12,6 +15,7 @@ public:
 	float look;	//bearing of the agent's look direction (in radians)
 	float range;
 	float shotCooldownRemainingTime;
+	bool firing;	//Whether the agent should spawn a bullet on this/the next frame
 	bool alive;
 	int id;
 	glm::vec2 forward();
@@ -20,6 +24,7 @@ public:
 	bool rotateTowards(glm::vec2 target, float deltaTime);	//returns true if rotation is enough to face target
 	bool moveTowards(glm::vec2 target, float deltaTime);	//returns true if movement is enough to reach target
 	void setTarget(glm::vec2 target);
-private:
-	
+	AIState *currentState;
+	void update(float frameTime, Game* gameState);
+	std::vector<Agent> otherVisibleAgents;
 };

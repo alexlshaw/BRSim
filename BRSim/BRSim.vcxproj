@@ -155,6 +155,9 @@
   <ItemGroup>
     <ClCompile Include="Agent.cpp" />
     <ClCompile Include="AgentManager.cpp" />
+    <ClCompile Include="AIState.cpp" />
+    <ClCompile Include="AIStateFighting.cpp" />
+    <ClCompile Include="AIStateWandering.cpp" />
     <ClCompile Include="Bullet.cpp" />
     <ClCompile Include="Game.cpp" />
     <ClCompile Include="glad.c" />
@@ -176,6 +179,9 @@
   <ItemGroup>
     <ClInclude Include="Agent.h" />
     <ClInclude Include="AgentManager.h" />
+    <ClInclude Include="AIState.h" />
+    <ClInclude Include="AIStateFighting.h" />
+    <ClInclude Include="AIStateWandering.h" />
     <ClInclude Include="Bullet.h" />
     <ClInclude Include="CStopWatch.h" />
     <ClInclude Include="Game.h" />

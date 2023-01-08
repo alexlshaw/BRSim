@@ -32,6 +32,15 @@
     <ClCompile Include="Game.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="AIState.cpp">
+      <Filter>Source Files\AI</Filter>
+    </ClCompile>
+    <ClCompile Include="AIStateWandering.cpp">
+      <Filter>Source Files\AI</Filter>
+    </ClCompile>
+    <ClCompile Include="AIStateFighting.cpp">
+      <Filter>Source Files\AI</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Settings.h">
@@ -67,6 +76,15 @@
     <ClInclude Include="Game.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="AIState.h">
+      <Filter>Header Files\AI</Filter>
+    </ClInclude>
+    <ClInclude Include="AIStateWandering.h">
+      <Filter>Header Files\AI</Filter>
+    </ClInclude>
+    <ClInclude Include="AIStateFighting.h">
+      <Filter>Header Files\AI</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <None Include="Data\Shaders\Basic.frag">
@@ -98,6 +116,12 @@
     </Filter>
     <Filter Include="Shaders">
       <UniqueIdentifier>{63fb00ec-f70a-40f3-b843-5f80ea03cb0f}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Header Files\AI">
+      <UniqueIdentifier>{083b1159-9674-42fc-a7d7-b90b27638f02}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\AI">
+      <UniqueIdentifier>{04e61f71-101f-49aa-a407-110a1a710a2a}</UniqueIdentifier>
     </Filter>
   </ItemGroup>
 </Project>

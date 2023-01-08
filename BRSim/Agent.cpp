@@ -5,11 +5,14 @@ Agent::Agent(glm::vec2 position, float direction, int identity)
 	look = direction;
 	pos = position;
 	range = AGENT_DEFAULT_RANGE;
+	firing = false;
 	alive = true;
 	hasTarget = false;
 	targetPosition = position;
 	id = identity;
 	shotCooldownRemainingTime = 0.0f;
+	//TODO: This currently leaks memory -> AI state on game end not deleted. Currently a non-issue in that game end also means process end, but should fix
+	currentState = static_cast<AIState*>(new AIStateWandering());
 }
 
 Agent::~Agent() {}
@@ -70,4 +73,11 @@ void Agent::setTarget(glm::vec2 target)
 {
 	targetPosition = target;
 	hasTarget = true;
+}
+
+void Agent::update(float frameTime, Game* gameState)
+{
+	//update the agent's internal state, then figure out what it wants to do next
+	shotCooldownRemainingTime = glm::max<float>(0.0f, shotCooldownRemainingTime - frameTime);
+	currentState->execute(*this, gameState, frameTime);
 }

@@ -5,6 +5,7 @@
 #include "glm\gtx\transform.hpp"
 #include "glm\gtx\compatibility.hpp"
 #include "Mesh.h"
+#include "Level.h"
 #include "Settings.h"
 #include "Shader.h"
 #include "Vertex.h"
@@ -19,7 +20,7 @@ private:
 	void buildCircleMeshes();
 	void newCircle();
 public:
-	Game(int levelWidth, int levelHeight);
+	Game(Level& level);
 	~Game();
 	void drawCircles(Shader* basic, int uBModelMatrix);
 	void update(float deltaTime);
@@ -28,4 +29,5 @@ public:
 	glm::vec2 circleCentre, nextCircleCentre, previousCircleCentre;
 	float circleRadius, previousCircleRadius, nextCircleRadius;
 	float elapsedShrinkTime = 0.0f;
+	Level& levelData;
 };

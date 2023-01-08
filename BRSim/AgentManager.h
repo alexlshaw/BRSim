@@ -23,10 +23,8 @@ public:
 	float checkCollision(Bullet& bullet, Agent& agent, float frameTime);
 	void spawnAgents();
 private:
-	void agentFight(Agent& agent, Agent& other, float deltaTime);
-	void agentAttack(Agent& agent, Agent& other);
 	void killAgentsOutsideCircle(Game* gameState);
 	void killAgent(Agent& agent);
-	void findTargetForAgent(Agent& agent, glm::vec2 nextCircleCentre, float nextCircleRadius);
+	void updateAgentSightOfOtherAgents(Agent& agent);
 	Level& levelData;
 };

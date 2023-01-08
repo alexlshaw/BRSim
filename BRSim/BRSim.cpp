@@ -386,7 +386,7 @@ void generateData()
 	manager = new AgentManager(MAX_AGENTS, *level);
 	manager->spawnAgents();
 	printf("Agents loaded in %i seconds\n", ((int)time(NULL) - levelTime));
-	gameState = new Game(level->width, level->height);
+	gameState = new Game(*level);
 	int totalTime = (int)time(NULL) - startTime;
 	printf("Total time: %i\n", totalTime);
 }

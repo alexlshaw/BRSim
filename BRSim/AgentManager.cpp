@@ -15,51 +15,12 @@ void AgentManager::updateAgents(float frameTime, Game* gameState)
 	{
 		if (agent.alive)
 		{
-			//progress cooldowns
-			agent.shotCooldownRemainingTime = glm::max<float>(0.0f, agent.shotCooldownRemainingTime - frameTime);
-
-			//1. If there is another living agent in range, fight them
-			bool fighting = false;
-			for (auto& otherAgent : agents)
+			updateAgentSightOfOtherAgents(agent);
+			agent.update(frameTime, gameState);
+			if (agent.firing)
 			{
-				if (&otherAgent != &agent && otherAgent.alive)
-				{
-					if (glm::length(agent.pos - otherAgent.pos) < agent.range)
-					{
-						agent.hasTarget = false;	//cancel whatever it was doing before, it's fighting time
-						fighting = true;
-						agentFight(agent, otherAgent, frameTime);
-					}
-				}
-			}
-			//2. If no nearby agent, is its target destination satisfactory??
-			if (!fighting)
-			{
-				if (agent.hasTarget)
-				{
-					//check if it's still good
-					if (!gameState->isPositionInsideNextCircle(agent.targetPosition))
-					{
-						//if not, cancel it and find a new one
-						agent.hasTarget = false;
-						findTargetForAgent(agent, gameState->nextCircleCentre, gameState->nextCircleRadius);
-					}
-
-					//2a. Turn and move towards target
-					if (agent.rotateTowards(agent.targetPosition, frameTime))
-					{
-						if (agent.moveTowards(agent.targetPosition, frameTime))
-						{
-							agent.hasTarget = false;	//if the agent reached its goal, it no longer has a target
-						}
-					}
-					
-				}
-				else
-				{
-					//2b. Find a target
-					findTargetForAgent(agent, gameState->nextCircleCentre, gameState->nextCircleRadius);
-				}
+				bullets.push_back(Bullet(agent.pos + 3.0f * agent.forward(), agent.forward(), 2.0f, agent.id));
+				agent.shotCooldownRemainingTime = AGENT_SHOT_COOLDOWN;
 			}
 		}
 	}
@@ -126,6 +87,7 @@ float AgentManager::checkCollision(Bullet& bullet, Agent& agent, float frameTime
 
 void AgentManager::spawnAgents()
 {
+	agents.reserve(agentsAlive);
 	for (int i = 0; i < agentsAlive; i++)
 	{
 		bool valid = false;
@@ -153,24 +115,6 @@ void AgentManager::killAgentsOutsideCircle(Game* gameState)
 	}
 }
 
-void AgentManager::agentFight(Agent& agent, Agent& other, float deltaTime)
-{
-	if (agent.rotateTowards(other.pos, deltaTime))
-	{
-		agentAttack(agent, other);
-	}
-}
-
-void AgentManager::agentAttack(Agent& agent, Agent& other)
-{
-	if (agent.shotCooldownRemainingTime <= 0.0f)
-	{
-		bullets.push_back(Bullet(agent.pos + 3.0f * agent.forward(), agent.forward(), 2.0f, agent.id));
-		agent.shotCooldownRemainingTime = AGENT_SHOT_COOLDOWN;
-	}
-	
-}
-
 void AgentManager::killAgent(Agent& agent)
 {
 	if (agent.alive)	//sanity check
@@ -188,33 +132,27 @@ void AgentManager::killAgent(Agent& agent)
 	}
 }
 
-void AgentManager::findTargetForAgent(Agent& agent, glm::vec2 nextCircleCentre, float nextCircleRadius)
-{
-	float distanceToNextCircleCentre = glm::length(agent.pos - nextCircleCentre);
-	if (distanceToNextCircleCentre > nextCircleRadius)
-	{
-		float targetDistance = distanceToNextCircleCentre - (0.95f * nextCircleRadius);
-		agent.setTarget(agent.pos + glm::normalize(nextCircleCentre - agent.pos) * targetDistance);
-	}
-	else
-	{
-		//agent is in the next circle, just pick a random spot (within the next circle)
-		float rTheta = glm::radians((float)(rand() % 360));
-		float rRad = (float)(rand() % (int)(nextCircleRadius));
-		float rx = glm::cos(rTheta) * rRad;
-		float ry = glm::sin(rTheta) * rRad;
-		glm::vec2 randomSpot = nextCircleCentre + glm::vec2(rx, ry);
-		//make sure the spot in question is actually within the level
-		randomSpot.x = glm::clamp(randomSpot.x, 0.0f, (float)levelData.width);
-		randomSpot.y = glm::clamp(randomSpot.y, 0.0f, (float)levelData.height);
-		agent.setTarget(randomSpot);
-	}
-}
-
 void AgentManager::cancelAllAgentTargets()
 {
 	for (auto& agent : agents)
 	{
 		agent.hasTarget = false;
+	}
+}
+
+//Track which other surviving agents can be seen by a given agent
+void AgentManager::updateAgentSightOfOtherAgents(Agent& agent)
+{
+	agent.otherVisibleAgents.clear();
+	for (auto& otherAgent : agents)
+	{
+		//for now, visibility is just a simple distance check
+		if (&otherAgent != &agent && otherAgent.alive)
+		{
+			if (glm::length(agent.pos - otherAgent.pos) < agent.range)
+			{
+				agent.otherVisibleAgents.push_back(otherAgent);
+			}
+		}
 	}
 }
