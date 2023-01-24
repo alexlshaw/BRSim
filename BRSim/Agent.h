@@ -25,6 +25,6 @@ public:
 	bool moveTowards(glm::vec2 target, float deltaTime);	//returns true if movement is enough to reach target
 	void setTarget(glm::vec2 target);
 	AIState *currentState;
-	void update(float frameTime, Game* gameState);
+	void update(float frameTime, const Game& gameState);
 	std::vector<Agent> otherVisibleAgents;
 };

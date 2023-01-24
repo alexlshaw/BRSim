@@ -8,6 +8,6 @@ class Agent;	//forward declaration
 class AIState
 {
 public:
-	virtual void execute(Agent& owner, Game* gameState, float frameTime) = 0;
+	virtual void execute(Agent& owner, const Game& gameState, float frameTime) = 0;
 	void setAgentState(Agent& owner, AIState* newState);
 };

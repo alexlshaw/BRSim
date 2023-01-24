@@ -9,14 +9,13 @@ Level::Level()
 	name = "level";
 }
 
-Level::Level(int width, int height, string levelName)
+Level::Level(int width, int height, std::string levelName)
 {
 	this->width = width;
 	this->height = height;
 	tex = new Texture();
 	walkTex = new Texture();
 	name = levelName;
-	buildMesh();
 	loadLevelImages();
 	printf("Level Texture loaded\n");
 	if (LOAD_LEVEL_SURFACE_DATA)
@@ -34,23 +33,6 @@ Level::~Level()
 {
 	delete tex;
 	delete walkTex;
-}
-
-void Level::draw(Shader* shader, GLuint uModel, bool walkLayer)
-{
-	glm::vec3 offset = glm::vec3(0.0f, 0.0f, 0.0f);// glm::vec3(x * (float)tileSize, y * (float)tileSize, 0.0f);
-	glm::mat4 tr = glm::translate(offset);
-	//set the shader's uniform
-	shader->setUniform(uModel, tr);
-	if (walkLayer)
-	{
-		walkTex->use();
-	}
-	else
-	{
-		tex->use();
-	}
-	mesh.draw();
 }
 
 LevelData Level::getLevelInfo(float x, float y)
@@ -72,31 +54,6 @@ LevelData Level::getLevelInfo(float x, float y)
 	unsigned char a = levelData[loc + 3];
 	data.walkable = (a != 0);
 	return data;
-}
-
-void Level::buildMesh()
-{
-	std::vector<TVertex> vertices;
-	std::vector<unsigned int> indices;
-	//mesh is a simple 2-triangle quad
-	TVertex bl = TVertex(glm::vec4(0.0f, 0.0f, 0.0f, 1.0f), glm::vec2(0.0f, 0.0f));
-	TVertex br = TVertex(glm::vec4((float)width, 0.0f, 0.0f, 1.0f), glm::vec2(1.0f, 0.0f));
-	TVertex tl = TVertex(glm::vec4(0.0f, (float)height, 0.0f, 1.0f), glm::vec2(0.0f, 1.0f));
-	TVertex tr = TVertex(glm::vec4((float)width, (float)height, 0.0f, 1.0f), glm::vec2(1.0f, 1.0f));
-	vertices.push_back(bl);
-	vertices.push_back(br);
-	vertices.push_back(tl);
-	vertices.push_back(tr);
-	//first tri
-	indices.push_back(0);
-	indices.push_back(1);
-	indices.push_back(2);
-	//2nd tri
-	indices.push_back(1);
-	indices.push_back(3);
-	indices.push_back(2);
-
-	mesh.Load(vertices, indices);
 }
 
 void Level::loadLevelImages()

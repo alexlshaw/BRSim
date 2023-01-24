@@ -1,15 +1,10 @@
 #pragma once
 
-#include "glm/glm.hpp"
-#include "glm\gtc\matrix_transform.hpp"
-#include "glm\gtx\transform.hpp" 
-#include "lodepng.h"
-#include "Mesh.h"
-#include "Settings.h"
-#include "Shader.h"
-#include "Texture.h"
-#include "Vertex.h"
 #include <string>
+
+#include "lodepng.h"
+#include "Settings.h"
+#include "Texture.h"
 
 class LevelData
 {
@@ -21,18 +16,15 @@ class Level
 {
 public:
 	Level();
-	Level(int width, int height, string levelName);
+	Level(int width, int height, std::string levelName);
 	~Level();
 	int width, height;
-	string name;
-	void draw(Shader* shader, GLuint uModel, bool walkLayer);
+	std::string name;
 	LevelData getLevelInfo(float x, float y);
-private:
-	Mesh mesh;
 	Texture* tex;
 	Texture* walkTex;
+private:
 	std::vector<unsigned char> levelData;
-	void buildMesh();
 	void loadLevelImages();
 	void loadWalkData();
 };
