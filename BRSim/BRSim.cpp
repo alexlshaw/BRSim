@@ -17,6 +17,7 @@
 #include "Game.h"
 #include "Level.h"
 #include "Mesh.h"
+#include "Renderer.h"
 #include "Settings.h"
 #include "Shader.h"
 #include "Vertex.h"
@@ -27,59 +28,14 @@ bool shouldExit = false;
 int screenWidth = 1024, screenHeight = 1024;
 
 //variables for manipulating viewport and simulation
-glm::vec2 windowOffset = glm::vec2(0.0f, 0.0f);
-glm::vec2 windowOffsetAtPanStart = windowOffset;
 bool panning = false;
 glm::vec2 mouseClickStartLoc;
-float zoomLevel = 1.0f;
 float timeRate = 1.0f;
 
-//Variables for the basic graphics stuff
-Shader* basic = nullptr;
-Shader* texturedUnlit = nullptr;
-Shader* agentShader = nullptr;
-int uBProjMatrix, uBModelMatrix, uTProjMatrix, uTModelMatrix, uTex;
-int uAProj, uAModel;
-GLuint avbo, avao, aibo;
-GLuint tvbo, tvao, tibo;
-
+Renderer* renderer = nullptr;
 Level* level = nullptr;
-bool showLevelWalkData = false;
 AgentManager* manager = nullptr;
-Mesh agentMesh, agentTargetingCircleMesh;
-
-Mesh lineMesh;
-std::vector<Vertex> linePoints;
-bool showTargetingLines = false;
-
 Game* gameState;
-
-void buildMeshes()
-{
-	std::vector<Vertex> vertices;
-	vertices.push_back(Vertex(glm::vec4(16.0f, 0.0f, 0.0f, 1.0f), black));
-	vertices.push_back(Vertex(glm::vec4(0.0f, 4.0f, 0.0f, 1.0f), black));
-	vertices.push_back(Vertex(glm::vec4(0.0f, -4.0f, 0.0f, 1.0f), black));
-	std::vector<unsigned int> indices;
-	indices.push_back(0);
-	indices.push_back(1);
-	indices.push_back(2);
-
-	agentMesh.Load(vertices, indices);
-
-	//now build the agent awareness/targeting circle mesh
-	vertices.clear();
-	indices.clear();
-	int sides = 32;
-	for (int i = 0; i < sides; i++)
-	{
-		float angle = glm::radians((360.0f / (float)sides) * (float)i);
-		glm::vec4 p = glm::vec4(glm::cos(angle), glm::sin(angle), 0.0f, 1.0f);
-		vertices.push_back(Vertex(p, red));
-		indices.push_back(i);
-	}
-	agentTargetingCircleMesh.Load(vertices, indices);
-}
 
 void error_callback(int error, const char* description)
 {
@@ -94,11 +50,11 @@ void key_callback(GLFWwindow* window, int key, int scancode, int action, int mod
 	}
 	if (key == GLFW_KEY_T && action == GLFW_PRESS)
 	{
-		showTargetingLines = !showTargetingLines;
+		renderer->toggleShowTargetingLines();
 	}
 	if (key == GLFW_KEY_W && action == GLFW_PRESS)
 	{
-		showLevelWalkData = !showLevelWalkData;
+		renderer->toggleShowLevelWalkData();
 	}
 	if (key == GLFW_KEY_O && action == GLFW_PRESS)
 	{
@@ -121,7 +77,7 @@ void mouse_button_callback(GLFWwindow* window, int button, int action, int mods)
 	if (button == GLFW_MOUSE_BUTTON_RIGHT && action == GLFW_PRESS)
 	{
 		mouseClickStartLoc = glm::vec2(xpos, ypos);
-		windowOffsetAtPanStart = windowOffset;
+		renderer->windowOffsetAtPanStart = renderer->windowOffset;
 		panning = true;
 	}
 	else if (button == GLFW_MOUSE_BUTTON_RIGHT && action == GLFW_RELEASE)
@@ -135,13 +91,13 @@ void scroll_callback(GLFWwindow* window, double xoffset, double yoffset)
 	//mousewheel only gives y offsets (integral values, 1 per mouse-wheel-click per frame it seems, up is +ve, down -ve)
 	if (yoffset > 0.0f)
 	{
-		zoomLevel *= 2.0f;
+		renderer->zoomLevel *= 2.0f;
 	}
 	else if (yoffset < 0.0f)
 	{
-		zoomLevel *= 0.5f;
+		renderer->zoomLevel *= 0.5f;
 	}
-	printf("Zooming to: %.2f\n", zoomLevel);
+	printf("Zooming to: %.2f\n", renderer->zoomLevel);
 }
 
 int init_GLFW()
@@ -177,40 +133,6 @@ int init_GLFW()
 	return 1;
 }
 
-void init_GL()
-{
-	glClearColor(1.0f, 1.0f, 1.0f, 1.0f);
-	glClearDepth(1.0);
-	glEnable(GL_DEPTH_TEST);
-	glDepthFunc(GL_LEQUAL);
-	glEnable(GL_BLEND);
-	glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
-	glEnable(GL_PROGRAM_POINT_SIZE);
-	glActiveTexture(GL_TEXTURE0);
-	if (glGetError() != GL_NO_ERROR)
-	{
-		printf("GL Initialisation error\n");
-	}
-	//load shaders
-	basic = new Shader();
-	basic->compileShaderFromFile("./Data/Shaders/basic.vert", VERTEX);
-	basic->compileShaderFromFile("./Data/Shaders/basic.frag", FRAGMENT);
-	basic->linkAndValidate();
-	uBProjMatrix = basic->getUniformLocation("projectionViewMatrix");
-	uBModelMatrix = basic->getUniformLocation("modelMatrix");
-	texturedUnlit = new Shader();
-	texturedUnlit->compileShaderFromFile("./Data/Shaders/TexturedUnlit.vert", VERTEX);
-	texturedUnlit->compileShaderFromFile("./Data/Shaders/TexturedUnlit.frag", FRAGMENT);
-	texturedUnlit->linkAndValidate();
-	uTProjMatrix = texturedUnlit->getUniformLocation("projectionViewMatrix");
-	uTModelMatrix = texturedUnlit->getUniformLocation("modelMatrix");
-	uTex = texturedUnlit->getUniformLocation("tex");
-
-	int width, height;
-	glfwGetFramebufferSize(mainWindow, &width, &height);
-	glViewport(0, 0, width, height);
-}
-
 void update(float frameTime)
 {
 	//update moust control of screen position
@@ -219,8 +141,8 @@ void update(float frameTime)
 		double xpos, ypos;
 		glfwGetCursorPos(mainWindow, &xpos, &ypos);
 		glm::vec2 mouseEndLoc = glm::vec2(xpos, ypos);
-		glm::vec2 delta = (mouseEndLoc - mouseClickStartLoc) / zoomLevel;
-		windowOffset = windowOffsetAtPanStart + glm::vec2(-delta.x, delta.y);
+		glm::vec2 delta = (mouseEndLoc - mouseClickStartLoc) / renderer->zoomLevel;
+		renderer->windowOffset = renderer->windowOffsetAtPanStart + glm::vec2(-delta.x, delta.y);
 	}
 	//update simulation state
 	if (manager->agentsAlive > 1)
@@ -231,125 +153,9 @@ void update(float frameTime)
 	}
 }
 
-//this function doesn't actually draw a line, it just adds the line data to the batch to be drawn later
-void drawLine(glm::vec2 start, glm::vec2 end, glm::vec4 colour)
-{
-	linePoints.push_back(Vertex(glm::vec4(start.x, start.y, 0.0f, 1.0f), colour));
-	linePoints.push_back(Vertex(glm::vec4(end.x, end.y, 0.0f, 1.0f), colour));
-}
-
-//this function takes the accumulated line data, and sends it off to the GPU to be drawn
-void drawLines()
-{
-	if (linePoints.size() > 0)
-	{
-		std::vector<unsigned int> indices;
-		for (unsigned int i = 0; i < linePoints.size(); i++)
-		{
-			indices.push_back(i);
-		}
-		lineMesh.Load(linePoints, indices);
-		basic->setUniform(uBModelMatrix, glm::identity<glm::mat4>());
-		lineMesh.draw(GL_LINES);
-	}
-}
-
-glm::mat4 computeProjection()
-{
-	float viewWidth = screenWidth / (zoomLevel * 2.0f);
-	float viewHeight = screenHeight / (zoomLevel * 2.0f);
-
-	float centreX = (screenWidth / 2.0f) + windowOffset.x;
-	float centreY = (screenHeight / 2.0f) + windowOffset.y;
-
-	float left = centreX - viewWidth;
-	float right = centreX + viewWidth;
-	float bottom = centreY - viewHeight;
-	float top = centreY + viewHeight;
-	glm::mat4 projection = glm::ortho(left, right, bottom, top, -1.0f, 1.0f);
-	return projection;
-}
-
-void draw()
-{
-	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-	linePoints.clear();
-	glm::mat4 projection = computeProjection();
-
-	//first draw the level
-	texturedUnlit->use();
-	texturedUnlit->setUniform(uTProjMatrix, projection);
-	//texturedUnlit->setUniform(uTModelMatrix, glm::identity<mat4>());
-	texturedUnlit->setUniform(uTex, 0);
-	level->draw(texturedUnlit, uTModelMatrix, showLevelWalkData);
-
-	basic->use();
-	basic->setUniform(uBProjMatrix, projection);
-
-	for (auto& agent : manager->agents)
-	{
-		glm::mat4 tr = glm::translate(glm::vec3(agent.pos.x, agent.pos.y, 0.0f));
-		glm::mat4 rot = glm::rotate(agent.look, glm::vec3(0.0f, 0.0f, 1.0f));
-		glm::mat4 modelview = tr * rot;
-		basic->setUniform(uBModelMatrix, modelview);
-		if (agent.alive)
-		{
-			agentMesh.draw();
-		}
-		else
-		{
-			agentMesh.draw(GL_LINE_LOOP);
-		}
-	}
-	//draw targeting circles
-	for (auto& agent : manager->agents)
-	{
-		glm::mat4 tr = glm::translate(glm::vec3(agent.pos.x, agent.pos.y, 0.0f));
-		glm::mat4 sc = glm::scale(glm::vec3(agent.range, agent.range, agent.range));
-		glm::mat4 modelview = tr * sc;
-		basic->setUniform(uBModelMatrix, modelview);
-		if (agent.alive)
-		{
-			agentTargetingCircleMesh.draw(GL_LINE_LOOP);
-		}
-	}
-
-	//draw bullets
-	for (auto& bullet : manager->bullets)
-	{
-		drawLine(bullet.pos, bullet.pos + (bullet.dir * 2.0f), black);
-	}
-
-	//draw target lines
-	if (showTargetingLines)
-	{
-		for (auto& agent : manager->agents)
-		{
-			if (agent.hasTarget)
-			{
-				drawLine(agent.pos, agent.targetPosition, green);
-			}
-		}
-	}
-
-	//draw circles
-	gameState->drawCircles(basic, uBModelMatrix);
-
-	//draw level boundary
-	drawLine(glm::vec2(0.0f, 0.0f), glm::vec2(0.0f, level->height), black);
-	drawLine(glm::vec2(0.0f, 0.0f), glm::vec2(level->width, 0.0f), black);
-	drawLine(glm::vec2(level->width, level->height), glm::vec2(0.0f, level->height), black);
-	drawLine(glm::vec2(level->width, level->height), glm::vec2(level->width, 0.0f), black);
-
-	drawLines();
-
-
-	glfwSwapBuffers(mainWindow);
-}
-
 void exit()
 {
-	if (basic != nullptr)
+	/*if (basic != nullptr)
 	{
 		delete basic;
 		basic = nullptr;
@@ -358,7 +164,7 @@ void exit()
 	{
 		delete texturedUnlit;
 		texturedUnlit = nullptr;
-	}
+	}*/
 	if (gameState != nullptr)
 	{
 		delete gameState;
@@ -398,10 +204,9 @@ int main()
 	{
 		return -1;
 	}
-	init_GL();
+	renderer = new Renderer(mainWindow);
 	srand((unsigned int)(time(NULL)));
 	generateData();
-	buildMeshes();
 	timer.Reset();
 	/* Loop until the user closes the window */
 	while (!shouldExit && !glfwWindowShouldClose(mainWindow))
@@ -409,7 +214,7 @@ int main()
 		float delta = timer.GetElapsedSeconds();
 		timer.Reset();
 		update(delta * timeRate);
-		draw();
+		renderer->draw(gameState, level, manager);
 		glfwPollEvents();
 		delta = timer.GetElapsedSeconds() * 1000.0f;
 		if (delta < 16.6f)	//cap framerate at ~60fps

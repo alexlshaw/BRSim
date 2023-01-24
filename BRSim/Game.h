@@ -15,14 +15,10 @@
 class Game
 {
 private:
-	
-	Mesh circleOfDeathMesh, nextCircleMesh;
-	void buildCircleMeshes();
 	void newCircle();
 public:
 	Game(Level& level);
 	~Game();
-	void drawCircles(Shader* basic, int uBModelMatrix);
 	void update(float deltaTime);
 	bool isPositionInsideNextCircle(glm::vec2 position);
 
