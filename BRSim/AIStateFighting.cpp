@@ -7,7 +7,8 @@ void AIStateFighting::execute(Agent& owner, const Game& gameState, float frameTi
 	//1. Check if we actually have anyone to fight
 	if (owner.otherVisibleAgents.empty())
 	{
-		//switch to fighting state
+		//switch to wandering state
+		owner.firing = false;
 		setAgentState(owner, new AIStateWandering());
 		return;	//Switching state deletes the state object, so we want to wrap up here
 	}

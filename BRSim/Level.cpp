@@ -9,7 +9,7 @@ Level::Level()
 	name = "level";
 }
 
-Level::Level(int width, int height, string levelName)
+Level::Level(int width, int height, std::string levelName)
 {
 	this->width = width;
 	this->height = height;

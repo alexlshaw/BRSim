@@ -1,6 +1,5 @@
 #pragma once
 
-#include <iostream>
 #include "glm/glm.hpp"
 #include "AIState.h"
 

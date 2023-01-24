@@ -1,6 +1,5 @@
 #pragma once
 
-#include <iostream>
 #include "AIState.h"
 
 class AIStateFighting : public AIState

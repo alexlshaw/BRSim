@@ -21,6 +21,7 @@ void AgentManager::updateAgents(float frameTime, const Game& gameState)
 			{
 				bullets.push_back(Bullet(agent.pos + 3.0f * agent.forward(), agent.forward(), 2.0f, agent.id));
 				agent.shotCooldownRemainingTime = AGENT_SHOT_COOLDOWN;
+				agent.firing = false;
 			}
 		}
 	}

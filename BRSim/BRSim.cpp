@@ -3,9 +3,6 @@
 #include "glad/glad.h"
 #include "GLFW/glfw3.h"
 #include "glm/glm.hpp"
-#include "glm\gtc\matrix_transform.hpp"
-#include "glm\gtx\transform.hpp" 
-#include "glm\gtx\compatibility.hpp"
 #include "time.h"
 #include <iostream>
 #include <memory.h>
@@ -17,11 +14,8 @@
 #include "CStopWatch.h"
 #include "Game.h"
 #include "Level.h"
-#include "Mesh.h"
 #include "Renderer.h"
 #include "Settings.h"
-#include "Shader.h"
-#include "Vertex.h"
 
 //Window control variables
 GLFWwindow* mainWindow = nullptr;
