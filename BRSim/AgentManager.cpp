@@ -8,7 +8,7 @@ AgentManager::AgentManager(int agentCount, Level& level)
 
 AgentManager::~AgentManager() {}
 
-void AgentManager::updateAgents(float frameTime, Game* gameState)
+void AgentManager::updateAgents(float frameTime, const Game& gameState)
 {
 	killAgentsOutsideCircle(gameState);
 	for (auto& agent : agents)
@@ -104,11 +104,11 @@ void AgentManager::spawnAgents()
 	}
 }
 
-void AgentManager::killAgentsOutsideCircle(Game* gameState)
+void AgentManager::killAgentsOutsideCircle(const Game& gameState)
 {
 	for (auto& agent : agents)
 	{
-		if (glm::length(agent.pos - gameState->circleCentre) > gameState->circleRadius && agent.alive)
+		if (glm::length(agent.pos - gameState.circleCentre) > gameState.circleRadius && agent.alive)
 		{
 			killAgent(agent);
 		}

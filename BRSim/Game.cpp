@@ -42,7 +42,7 @@ void Game::newCircle()
 	elapsedShrinkTime = 0.0f;
 }
 
-bool Game::isPositionInsideNextCircle(glm::vec2 position)
+bool Game::isPositionInsideNextCircle(glm::vec2 position) const
 {
 	float distanceToCentre = glm::length(position - nextCircleCentre);
 	return distanceToCentre < nextCircleRadius;

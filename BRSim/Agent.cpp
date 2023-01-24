@@ -75,7 +75,7 @@ void Agent::setTarget(glm::vec2 target)
 	hasTarget = true;
 }
 
-void Agent::update(float frameTime, Game* gameState)
+void Agent::update(float frameTime, const Game& gameState)
 {
 	//update the agent's internal state, then figure out what it wants to do next
 	shotCooldownRemainingTime = glm::max<float>(0.0f, shotCooldownRemainingTime - frameTime);

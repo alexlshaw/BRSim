@@ -25,14 +25,11 @@ public:
 	~Level();
 	int width, height;
 	string name;
-	void draw(Shader* shader, GLuint uModel, bool walkLayer);
 	LevelData getLevelInfo(float x, float y);
-private:
-	Mesh mesh;
 	Texture* tex;
 	Texture* walkTex;
+private:
 	std::vector<unsigned char> levelData;
-	void buildMesh();
 	void loadLevelImages();
 	void loadWalkData();
 };

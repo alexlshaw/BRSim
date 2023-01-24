@@ -8,6 +8,7 @@
 #include "glm\gtx\compatibility.hpp"
 #include "time.h"
 #include <iostream>
+#include <memory.h>
 #include <thread>
 #include <vector>
 #include "AgentManager.h"
@@ -32,10 +33,10 @@ bool panning = false;
 glm::vec2 mouseClickStartLoc;
 float timeRate = 1.0f;
 
-Renderer* renderer = nullptr;
-Level* level = nullptr;
-AgentManager* manager = nullptr;
-Game* gameState;
+std::unique_ptr<Renderer> renderer;
+std::unique_ptr<Level> level;
+std::unique_ptr<AgentManager> manager;
+std::unique_ptr<Game> gameState;
 
 void error_callback(int error, const char* description)
 {
@@ -148,51 +149,26 @@ void update(float frameTime)
 	if (manager->agentsAlive > 1)
 	{
 		manager->updateBullets(frameTime);
-		manager->updateAgents(frameTime, gameState);
+		manager->updateAgents(frameTime, *gameState);
 		gameState->update(frameTime);
 	}
 }
 
 void exit()
 {
-	/*if (basic != nullptr)
-	{
-		delete basic;
-		basic = nullptr;
-	}
-	if (texturedUnlit != nullptr)
-	{
-		delete texturedUnlit;
-		texturedUnlit = nullptr;
-	}*/
-	if (gameState != nullptr)
-	{
-		delete gameState;
-		gameState = nullptr;
-	}
-	if (manager != nullptr)
-	{
-		delete manager;
-		manager = nullptr;
-	}
-	if (level != nullptr)
-	{
-		delete level;
-		level = nullptr;
-	}
 	glfwTerminate();
 }
 
 void generateData()
 {
 	int startTime = (int)time(NULL);
-	level = new Level(2048, 2048, "sanhok");
+	level = std::make_unique<Level>(2048, 2048, "sanhok");
 	int levelTime = (int)time(NULL);
 	printf("Level loaded in %i seconds\n", levelTime - startTime);
-	manager = new AgentManager(MAX_AGENTS, *level);
+	manager = std::make_unique<AgentManager>(MAX_AGENTS, *level);
 	manager->spawnAgents();
 	printf("Agents loaded in %i seconds\n", ((int)time(NULL) - levelTime));
-	gameState = new Game(*level);
+	gameState = std::make_unique<Game>(*level);
 	int totalTime = (int)time(NULL) - startTime;
 	printf("Total time: %i\n", totalTime);
 }
@@ -204,9 +180,9 @@ int main()
 	{
 		return -1;
 	}
-	renderer = new Renderer(mainWindow);
 	srand((unsigned int)(time(NULL)));
 	generateData();
+	renderer = std::make_unique<Renderer>(mainWindow, *level);
 	timer.Reset();
 	/* Loop until the user closes the window */
 	while (!shouldExit && !glfwWindowShouldClose(mainWindow))
@@ -214,7 +190,7 @@ int main()
 		float delta = timer.GetElapsedSeconds();
 		timer.Reset();
 		update(delta * timeRate);
-		renderer->draw(gameState, level, manager);
+		renderer->draw(*gameState, *level, *manager);
 		glfwPollEvents();
 		delta = timer.GetElapsedSeconds() * 1000.0f;
 		if (delta < 16.6f)	//cap framerate at ~60fps

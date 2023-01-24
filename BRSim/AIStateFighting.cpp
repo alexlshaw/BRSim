@@ -2,7 +2,7 @@
 #include "AIStateWandering.h"
 #include "Agent.h"
 
-void AIStateFighting::execute(Agent& owner, Game* gameState, float frameTime)
+void AIStateFighting::execute(Agent& owner, const Game& gameState, float frameTime)
 {
 	//1. Check if we actually have anyone to fight
 	if (owner.otherVisibleAgents.empty())

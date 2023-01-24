@@ -20,7 +20,7 @@ public:
 	Game(Level& level);
 	~Game();
 	void update(float deltaTime);
-	bool isPositionInsideNextCircle(glm::vec2 position);
+	bool isPositionInsideNextCircle(glm::vec2 position) const;
 
 	glm::vec2 circleCentre, nextCircleCentre, previousCircleCentre;
 	float circleRadius, previousCircleRadius, nextCircleRadius;

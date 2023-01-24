@@ -6,5 +6,5 @@
 class AIStateFighting : public AIState
 {
 public:
-	void execute(Agent& owner, Game* gameState, float frameTime) override;
+	void execute(Agent& owner, const Game& gameState, float frameTime) override;
 };

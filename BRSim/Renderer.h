@@ -6,6 +6,7 @@
 #include "glm\gtc\matrix_transform.hpp"
 #include "glm\gtx\transform.hpp" 
 #include "glm\gtx\compatibility.hpp"
+#include <memory>
 #include <vector>
 
 #include "AgentManager.h"
@@ -13,6 +14,7 @@
 #include "Level.h"
 #include "Mesh.h"
 #include "Shader.h"
+#include "Texture.h"
 
 //colours
 const glm::vec4 white = glm::vec4(1.0f, 1.0f, 1.0f, 1.0f);
@@ -27,37 +29,37 @@ private:
 	GLFWwindow* mainWindow;
 	int screenWidth, screenHeight;
 	//Variables for the basic graphics stuff
-	Shader* basic = nullptr;
-	Shader* texturedUnlit = nullptr;
-	Shader* agentShader = nullptr;
+	std::unique_ptr<Shader> basic;
+	std::unique_ptr<Shader> texturedUnlit;
 	int uBProjMatrix, uBModelMatrix, uTProjMatrix, uTModelMatrix, uTex;
-	int uAProj, uAModel;
-	GLuint avbo, avao, aibo;
-	GLuint tvbo, tvao, tibo;
 
 	Mesh circleOfDeathMesh, nextCircleMesh;
 	Mesh agentMesh, agentTargetingCircleMesh;
 	Mesh lineMesh;
+	Mesh levelMesh;
 	std::vector<Vertex> linePoints;
 	
 	bool showTargetingLines;
 	bool showLevelWalkData;
 
 	void initOpenGL();
+	void loadShaders();
 	void buildAgentMeshes();
 	void buildCircleMeshes();
+	void buildLevelMesh(const Level& level);
 	void drawLine(glm::vec2 start, glm::vec2 end, glm::vec4 colour); //this function doesn't actually draw a line, it just adds the line data to the batch to be drawn later
 	void drawLines();//this function takes the accumulated line data, and sends it off to the GPU to be drawn
-	void drawCircles(Game* gameState);
+	void drawCircles(const Game& gameState);
+	void drawLevel(const Level& level, glm::mat4 projection);
 	glm::mat4 computeProjection();
 public:
 	glm::vec2 windowOffset;
 	glm::vec2 windowOffsetAtPanStart;
 	float zoomLevel;
 	
-	Renderer(GLFWwindow* mainWindow);
+	Renderer(GLFWwindow* mainWindow, const Level& level);
 	~Renderer();
-	void draw(Game* gameState, Level* level, AgentManager* manager);
+	void draw(const Game& gameState, const Level& level, const AgentManager& manager);
 	void toggleShowTargetingLines();
 	void toggleShowLevelWalkData();
 };

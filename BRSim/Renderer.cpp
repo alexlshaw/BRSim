@@ -1,6 +1,6 @@
 #include "Renderer.h"
 
-Renderer::Renderer(GLFWwindow* mainWindow)
+Renderer::Renderer(GLFWwindow* mainWindow, const Level& level)
 {
 	this->mainWindow = mainWindow;
 	showLevelWalkData = false;
@@ -9,23 +9,13 @@ Renderer::Renderer(GLFWwindow* mainWindow)
 	windowOffset = glm::vec2(0.0f, 0.0f);
 	windowOffsetAtPanStart = windowOffset;
 	initOpenGL();
+	loadShaders();
 	buildCircleMeshes();
 	buildAgentMeshes();
+	buildLevelMesh(level);
 }
 
-Renderer::~Renderer() 
-{
-	if (basic != nullptr)
-	{
-		delete basic;
-		basic = nullptr;
-	}
-	if (texturedUnlit != nullptr)
-	{
-		delete texturedUnlit;
-		texturedUnlit = nullptr;
-	}
-}
+Renderer::~Renderer() {}
 
 void Renderer::initOpenGL()
 {
@@ -41,24 +31,26 @@ void Renderer::initOpenGL()
 	{
 		printf("GL Initialisation error\n");
 	}
-	//load shaders
-	basic = new Shader();
+	//Extract the size of the window we're working with
+	glfwGetFramebufferSize(mainWindow, &screenWidth, &screenHeight);
+	glViewport(0, 0, screenWidth, screenHeight);
+}
+
+void Renderer::loadShaders()
+{
+	basic = std::make_unique<Shader>();
 	basic->compileShaderFromFile("./Data/Shaders/basic.vert", VERTEX);
 	basic->compileShaderFromFile("./Data/Shaders/basic.frag", FRAGMENT);
 	basic->linkAndValidate();
 	uBProjMatrix = basic->getUniformLocation("projectionViewMatrix");
 	uBModelMatrix = basic->getUniformLocation("modelMatrix");
-	texturedUnlit = new Shader();
+	texturedUnlit = std::make_unique<Shader>();
 	texturedUnlit->compileShaderFromFile("./Data/Shaders/TexturedUnlit.vert", VERTEX);
 	texturedUnlit->compileShaderFromFile("./Data/Shaders/TexturedUnlit.frag", FRAGMENT);
 	texturedUnlit->linkAndValidate();
 	uTProjMatrix = texturedUnlit->getUniformLocation("projectionViewMatrix");
 	uTModelMatrix = texturedUnlit->getUniformLocation("modelMatrix");
 	uTex = texturedUnlit->getUniformLocation("tex");
-
-	//Extract the size of the window we're working with
-	glfwGetFramebufferSize(mainWindow, &screenWidth, &screenHeight);
-	glViewport(0, 0, screenWidth, screenHeight);
 }
 
 void Renderer::buildCircleMeshes()
@@ -129,22 +121,44 @@ void Renderer::buildAgentMeshes()
 	agentTargetingCircleMesh.Load(vertices, indices);
 }
 
-void Renderer::draw(Game* gameState, Level* level, AgentManager* manager)
+void Renderer::buildLevelMesh(const Level& level)
+{
+	std::vector<TVertex> vertices;
+	std::vector<unsigned int> indices;
+	//mesh is a simple 2-triangle quad
+	TVertex botLeft = TVertex(glm::vec4(0.0f, 0.0f, 0.0f, 1.0f), glm::vec2(0.0f, 0.0f));
+	TVertex botRight = TVertex(glm::vec4((float)level.width, 0.0f, 0.0f, 1.0f), glm::vec2(1.0f, 0.0f));
+	TVertex topLeft = TVertex(glm::vec4(0.0f, (float)level.height, 0.0f, 1.0f), glm::vec2(0.0f, 1.0f));
+	TVertex topRight = TVertex(glm::vec4((float)level.width, (float)level.height, 0.0f, 1.0f), glm::vec2(1.0f, 1.0f));
+	vertices.push_back(botLeft);
+	vertices.push_back(botRight);
+	vertices.push_back(topLeft);
+	vertices.push_back(topRight);
+	//first tri
+	indices.push_back(0);
+	indices.push_back(1);
+	indices.push_back(2);
+	//2nd tri
+	indices.push_back(1);
+	indices.push_back(3);
+	indices.push_back(2);
+
+	levelMesh.Load(vertices, indices);
+}
+
+void Renderer::draw(const Game& gameState, const Level& level, const AgentManager& manager)
 {
 	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 	linePoints.clear();
 	glm::mat4 projection = computeProjection();
 
 	//first draw the level
-	texturedUnlit->use();
-	texturedUnlit->setUniform(uTProjMatrix, projection);
-	texturedUnlit->setUniform(uTex, 0);
-	level->draw(texturedUnlit, uTModelMatrix, showLevelWalkData);
+	drawLevel(level, projection);
 
 	//draw the agents
 	basic->use();
 	basic->setUniform(uBProjMatrix, projection);
-	for (auto& agent : manager->agents)
+	for (auto& agent : manager.agents)
 	{
 		glm::mat4 tr = glm::translate(glm::vec3(agent.pos.x, agent.pos.y, 0.0f));
 		glm::mat4 rot = glm::rotate(agent.look, glm::vec3(0.0f, 0.0f, 1.0f));
@@ -160,7 +174,7 @@ void Renderer::draw(Game* gameState, Level* level, AgentManager* manager)
 		}
 	}
 	//draw targeting circles
-	for (auto& agent : manager->agents)
+	for (auto& agent : manager.agents)
 	{
 		glm::mat4 tr = glm::translate(glm::vec3(agent.pos.x, agent.pos.y, 0.0f));
 		glm::mat4 sc = glm::scale(glm::vec3(agent.range, agent.range, agent.range));
@@ -173,7 +187,7 @@ void Renderer::draw(Game* gameState, Level* level, AgentManager* manager)
 	}
 
 	//draw bullets
-	for (auto& bullet : manager->bullets)
+	for (auto& bullet : manager.bullets)
 	{
 		drawLine(bullet.pos, bullet.pos + (bullet.dir * 2.0f), black);
 	}
@@ -181,7 +195,7 @@ void Renderer::draw(Game* gameState, Level* level, AgentManager* manager)
 	//draw target lines
 	if (showTargetingLines)
 	{
-		for (auto& agent : manager->agents)
+		for (auto& agent : manager.agents)
 		{
 			if (agent.hasTarget)
 			{
@@ -194,10 +208,10 @@ void Renderer::draw(Game* gameState, Level* level, AgentManager* manager)
 	drawCircles(gameState);
 
 	//draw level boundary
-	drawLine(glm::vec2(0.0f, 0.0f), glm::vec2(0.0f, level->height), black);
-	drawLine(glm::vec2(0.0f, 0.0f), glm::vec2(level->width, 0.0f), black);
-	drawLine(glm::vec2(level->width, level->height), glm::vec2(0.0f, level->height), black);
-	drawLine(glm::vec2(level->width, level->height), glm::vec2(level->width, 0.0f), black);
+	drawLine(glm::vec2(0.0f, 0.0f), glm::vec2(0.0f, level.height), black);
+	drawLine(glm::vec2(0.0f, 0.0f), glm::vec2(level.width, 0.0f), black);
+	drawLine(glm::vec2(level.width, level.height), glm::vec2(0.0f, level.height), black);
+	drawLine(glm::vec2(level.width, level.height), glm::vec2(level.width, 0.0f), black);
 
 	drawLines();
 
@@ -226,21 +240,40 @@ void Renderer::drawLines()
 	}
 }
 
-void Renderer::drawCircles(Game* gameState)
+void Renderer::drawCircles(const Game& gameState)
 {
 	//draw circle of death
-	glm::mat4 tr = glm::translate(glm::vec3(gameState->circleCentre.x, gameState->circleCentre.y, 0.0f));
-	glm::mat4 sc = glm::scale(glm::vec3(gameState->circleRadius, gameState->circleRadius, gameState->circleRadius));
+	glm::mat4 tr = glm::translate(glm::vec3(gameState.circleCentre.x, gameState.circleCentre.y, 0.0f));
+	glm::mat4 sc = glm::scale(glm::vec3(gameState.circleRadius, gameState.circleRadius, gameState.circleRadius));
 	glm::mat4 modelview = tr * sc;
 	basic->setUniform(uBModelMatrix, modelview);
 	circleOfDeathMesh.draw();
 
 	//draw upcoming circle
-	tr = glm::translate(glm::vec3(gameState->nextCircleCentre.x, gameState->nextCircleCentre.y, 0.0f));
-	sc = glm::scale(glm::vec3(gameState->nextCircleRadius, gameState->nextCircleRadius, gameState->nextCircleRadius));
+	tr = glm::translate(glm::vec3(gameState.nextCircleCentre.x, gameState.nextCircleCentre.y, 0.0f));
+	sc = glm::scale(glm::vec3(gameState.nextCircleRadius, gameState.nextCircleRadius, gameState.nextCircleRadius));
 	modelview = tr * sc;
 	basic->setUniform(uBModelMatrix, modelview);
 	nextCircleMesh.draw(GL_LINE_LOOP);
+}
+
+void Renderer::drawLevel(const Level& level, glm::mat4 projection)
+{
+	texturedUnlit->use();
+	texturedUnlit->setUniform(uTProjMatrix, projection);
+	texturedUnlit->setUniform(uTex, 0);
+	glm::mat4 tr = glm::translate(glm::vec3(0.0f, 0.0f, 0.0f));
+	//set the shader's uniform
+	texturedUnlit->setUniform(uTModelMatrix, tr);
+	if (showLevelWalkData)
+	{
+		level.walkTex->use();
+	}
+	else
+	{
+		level.tex->use();
+	}
+	levelMesh.draw();
 }
 
 glm::mat4 Renderer::computeProjection()
