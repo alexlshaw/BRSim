@@ -1,9 +1,6 @@
 // BRSim.cpp : This file contains the 'main' function. Program execution begins and ends there.
 
-#include "glad/glad.h"
-#include "GLFW/glfw3.h"
-#include "glm/glm.hpp"
-#include "time.h"
+#include <Windows.h>
 #include <iostream>
 #include <memory.h>
 #include <thread>
@@ -16,6 +13,11 @@
 #include "Level.h"
 #include "Renderer.h"
 #include "Settings.h"
+
+#include "glad/glad.h"
+#include "GLFW/glfw3.h"
+#include "glm/glm.hpp"
+#include "time.h"
 
 //Window control variables
 GLFWwindow* mainWindow = nullptr;
