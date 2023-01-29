@@ -1,10 +1,17 @@
 #pragma once
 
+#include <functional>
 #include "glm/glm.hpp"
 #include "AIState.h"
 #include "AIStateWandering.h"
 #include "Game.h"
 #include "Settings.h"
+
+const int AGENT_MAX_HEALTH = 100;
+const float AGENT_MAX_ROTATE_SPEED = 90.0f;
+const float AGENT_MAX_SPEED = 20.0f;
+const float AGENT_SHOT_COOLDOWN = 1.0f;
+const float AGENT_DEFAULT_RANGE = 60.0f;	//default 30
 
 class Agent
 {
@@ -17,6 +24,7 @@ public:
 	float shotCooldownRemainingTime;
 	bool firing;	//Whether the agent should spawn a bullet on this/the next frame
 	bool alive;
+	int currentHealth;
 	int id;
 	glm::vec2 forward();
 	bool hasTarget;
@@ -26,5 +34,5 @@ public:
 	void setTarget(glm::vec2 target);
 	AIState *currentState;
 	void update(float frameTime, const Game& gameState);
-	std::vector<Agent> otherVisibleAgents;
+	std::vector<std::reference_wrapper<Agent>> otherVisibleAgents;
 };

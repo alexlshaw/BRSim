@@ -2,6 +2,8 @@
 
 #include "glm/glm.hpp"
 
+const int BULLET_BASE_DAMAGE = 20;
+
 class Bullet
 {
 public:
@@ -11,5 +13,6 @@ public:
 	float life;
 	bool hitTarget;
 	int ownerID;
+	int damage;
 private:
 };
