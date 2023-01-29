@@ -4,7 +4,7 @@ Game::Game(Level& level)
 	: levelData(level)
 {
 	circleCentre = glm::vec2(level.width / 2.0f, level.height / 2.0f);
-	circleRadius = glm::max<float>(level.width, level.height) * 1.5f;
+	circleRadius = (float)glm::max<int>(level.width, level.height) * 1.5f;
 	previousCircleRadius = circleRadius;
 	previousCircleCentre = circleCentre;
 	newCircle();

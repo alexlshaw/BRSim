@@ -3,7 +3,6 @@
 #include <string>
 
 #include "glm\glm.hpp"
-#include "lodepng.h"
 #include "Settings.h"
 #include "Texture.h"
 
