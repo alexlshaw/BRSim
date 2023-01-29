@@ -35,10 +35,19 @@ void Game::update(float deltaTime)
 void Game::newCircle()
 {
 	nextCircleRadius = circleRadius / 2.0f;
-	//compute random bearing and distance from current circle centre
-	float angle = glm::radians((float)(rand() % 360));
-	float distance = (float)(rand() % (int)nextCircleRadius);
-	nextCircleCentre = circleCentre + glm::vec2(glm::cos(angle) * distance, glm::sin(angle) * distance);
+	//generate locations for the new circle until we find one within the level bounds
+	bool validNewCircle = false;
+	while (!validNewCircle)
+	{
+		//compute random bearing and distance from current circle centre
+		float angle = glm::radians((float)(rand() % 360));
+		float distance = (float)(rand() % (int)nextCircleRadius);
+		nextCircleCentre = circleCentre + glm::vec2(glm::cos(angle) * distance, glm::sin(angle) * distance);
+		if (levelData.locationInBounds(nextCircleCentre))
+		{
+			validNewCircle = true;
+		}
+	}
 	elapsedShrinkTime = 0.0f;
 }
 
