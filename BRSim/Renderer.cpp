@@ -5,6 +5,7 @@ Renderer::Renderer(GLFWwindow* mainWindow, const Level& level)
 	this->mainWindow = mainWindow;
 	showLevelWalkData = false;
 	showTargetingLines = false;
+	showHealthBars = true;
 	zoomLevel = 1.0f;
 	windowOffset = glm::vec2(0.0f, 0.0f);
 	windowOffsetAtPanStart = windowOffset;
@@ -119,6 +120,29 @@ void Renderer::buildAgentMeshes()
 		indices.push_back(i);
 	}
 	agentTargetingCircleMesh.Load(vertices, indices);
+
+	//build the healthbar meshes (simple 2-triange quad)
+	vertices.clear();
+	indices.clear();
+	vertices.push_back(Vertex(glm::vec4(-12.0f, 0.0f, 0.0f, 1.0f), red));
+	vertices.push_back(Vertex(glm::vec4((float)12.0f, 0.0f, 0.0f, 1.0f), red));
+	vertices.push_back(Vertex(glm::vec4(-12.0f, (float)2.0f, 0.0f, 1.0f), red));
+	vertices.push_back(Vertex(glm::vec4((float)12.0f, 2.0f, 0.0f, 1.0f), red));
+	//first tri
+	indices.push_back(0);
+	indices.push_back(1);
+	indices.push_back(2);
+	//2nd tri
+	indices.push_back(1);
+	indices.push_back(3);
+	indices.push_back(2);
+	agentHealthBackMesh.Load(vertices, indices);
+	//recolour to green for the front mesh
+	for (auto& vertex : vertices)
+	{
+		vertex.color = green;
+	}
+	agentHealthFrontMesh.Load(vertices, indices);
 }
 
 void Renderer::buildLevelMesh(const Level& level)
@@ -155,36 +179,10 @@ void Renderer::draw(const Game& gameState, const Level& level, const AgentManage
 	//first draw the level
 	drawLevel(level, projection);
 
-	//draw the agents
+	//draw the agents (and everything else using the basic shader)
 	basic->use();
 	basic->setUniform(uBProjMatrix, projection);
-	for (auto& agent : manager.agents)
-	{
-		glm::mat4 tr = glm::translate(glm::vec3(agent.pos.x, agent.pos.y, 0.0f));
-		glm::mat4 rot = glm::rotate(agent.look, glm::vec3(0.0f, 0.0f, 1.0f));
-		glm::mat4 modelview = tr * rot;
-		basic->setUniform(uBModelMatrix, modelview);
-		if (agent.alive)
-		{
-			agentMesh.draw();
-		}
-		else
-		{
-			agentMesh.draw(GL_LINE_LOOP);
-		}
-	}
-	//draw targeting circles
-	for (auto& agent : manager.agents)
-	{
-		glm::mat4 tr = glm::translate(glm::vec3(agent.pos.x, agent.pos.y, 0.0f));
-		glm::mat4 sc = glm::scale(glm::vec3(agent.range, agent.range, agent.range));
-		glm::mat4 modelview = tr * sc;
-		basic->setUniform(uBModelMatrix, modelview);
-		if (agent.alive)
-		{
-			agentTargetingCircleMesh.draw(GL_LINE_LOOP);
-		}
-	}
+	drawAgents(manager);
 
 	//draw bullets
 	for (auto& bullet : manager.bullets)
@@ -237,6 +235,44 @@ void Renderer::drawLines()
 		lineMesh.Load(linePoints, indices);
 		basic->setUniform(uBModelMatrix, glm::identity<glm::mat4>());
 		lineMesh.draw(GL_LINES);
+	}
+}
+
+void Renderer::drawAgents(const AgentManager& manager)
+{
+	for (auto& agent : manager.agents)
+	{
+		glm::mat4 tr = glm::translate(glm::vec3(agent.pos.x, agent.pos.y, 0.0f));
+		glm::mat4 rot = glm::rotate(agent.look, glm::vec3(0.0f, 0.0f, 1.0f));
+		glm::mat4 modelview = tr * rot;
+		basic->setUniform(uBModelMatrix, modelview);
+		if (agent.alive)
+		{
+			agentMesh.draw();
+
+			//draw targeting cicle
+			glm::mat4 sc = glm::scale(glm::vec3(agent.range, agent.range, agent.range));
+			modelview = tr * sc;
+			basic->setUniform(uBModelMatrix, modelview);
+			agentTargetingCircleMesh.draw(GL_LINE_LOOP);
+
+			if (showHealthBars)
+			{
+				//draw health bar
+				tr = glm::translate(glm::vec3(agent.pos.x, agent.pos.y - 10.0f, 0.0f));
+				modelview = tr;
+				basic->setUniform(uBModelMatrix, modelview);
+				agentHealthBackMesh.draw();
+				sc = glm::scale(glm::vec3((float)agent.currentHealth / (float)AGENT_MAX_HEALTH, 1.0f, 1.0f));
+				modelview = tr * sc;
+				basic->setUniform(uBModelMatrix, modelview);
+				agentHealthFrontMesh.draw();
+			}
+		}
+		else
+		{
+			agentMesh.draw(GL_LINE_LOOP);
+		}
 	}
 }
 
@@ -300,4 +336,9 @@ void Renderer::toggleShowTargetingLines()
 void Renderer::toggleShowLevelWalkData()
 {
 	showLevelWalkData = !showLevelWalkData;
+}
+
+void Renderer::toggleShowHealthBars()
+{
+	showHealthBars = !showHealthBars;
 }

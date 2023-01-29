@@ -2,6 +2,7 @@
 
 #include <string>
 
+#include "glm\glm.hpp"
 #include "lodepng.h"
 #include "Settings.h"
 #include "Texture.h"
@@ -23,6 +24,7 @@ public:
 	LevelData getLevelInfo(float x, float y);
 	Texture* tex;
 	Texture* walkTex;
+	bool locationInBounds(glm::vec2 location);
 private:
 	std::vector<unsigned char> levelData;
 	void loadLevelImages();

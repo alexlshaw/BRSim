@@ -157,6 +157,7 @@
     <ClCompile Include="AgentManager.cpp" />
     <ClCompile Include="AIState.cpp" />
     <ClCompile Include="AIStateFighting.cpp" />
+    <ClCompile Include="AIStateFleeing.cpp" />
     <ClCompile Include="AIStateWandering.cpp" />
     <ClCompile Include="Bullet.cpp" />
     <ClCompile Include="Game.cpp" />
@@ -182,6 +183,7 @@
     <ClInclude Include="AgentManager.h" />
     <ClInclude Include="AIState.h" />
     <ClInclude Include="AIStateFighting.h" />
+    <ClInclude Include="AIStateFleeing.h" />
     <ClInclude Include="AIStateWandering.h" />
     <ClInclude Include="Bullet.h" />
     <ClInclude Include="CStopWatch.h" />

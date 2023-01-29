@@ -91,3 +91,9 @@ void Level::loadWalkData()
 		}
 	}
 }
+
+bool Level::locationInBounds(glm::vec2 location)
+{
+	return location.x >= 0.0f && location.x < (float)width &&
+		location.y >= 0.0f && location.y < (float)height;
+}

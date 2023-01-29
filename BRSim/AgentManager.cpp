@@ -1,6 +1,6 @@
 #include "AgentManager.h"
 
-AgentManager::AgentManager(int agentCount, Level& level) 
+AgentManager::AgentManager(int agentCount, Level& level)
 	: levelData(level)
 {
 	agentsAlive = agentCount;
@@ -29,7 +29,6 @@ void AgentManager::updateAgents(float frameTime, const Game& gameState)
 
 void AgentManager::updateBullets(float frameTime)
 {
-	//Seems like at the moment, agents might be being instakilled by their own bullets?
 	for (auto& bullet : bullets)
 	{
 		float minHitT = 99999.0f;
@@ -49,9 +48,13 @@ void AgentManager::updateBullets(float frameTime)
 		//if we ended up hitting an agent, kill it
 		if (hitAgentIdx != -1)
 		{
-			printf("Agent %i hit by shot fired by agent %i\n", agents[hitAgentIdx].id, bullet.ownerID);
-			killAgent(agents[hitAgentIdx]);
+			agents[hitAgentIdx].currentHealth -= bullet.damage;
+			if (agents[hitAgentIdx].currentHealth <= 0)
+			{
+				killAgent(agents[hitAgentIdx]);
+			}
 			bullet.hitTarget = true;
+			printf("Agent %i hit by shot fired by agent %i. Remaining HP: %i\n", agents[hitAgentIdx].id, bullet.ownerID, agents[hitAgentIdx].currentHealth);
 		}
 		bullet.life -= frameTime;
 		bullet.pos += bullet.dir * frameTime * BULLET_SPEED;
@@ -152,6 +155,7 @@ void AgentManager::updateAgentSightOfOtherAgents(Agent& agent)
 		{
 			if (glm::length(agent.pos - otherAgent.pos) < agent.range)
 			{
+				//printf("Agent %i sees agent %i\n", agent.id, otherAgent.id);
 				agent.otherVisibleAgents.push_back(otherAgent);
 			}
 		}
