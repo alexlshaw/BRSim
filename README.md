@@ -10,7 +10,9 @@
  
  Esc: Exit
  
- T: Toggle agent targeting lines
+ T: Toggle agent targeting line visibility
+ 
+ H: Toggle agent health bar visibility
  
  W: Show level walkability data
  

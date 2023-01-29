@@ -34,13 +34,14 @@ private:
 	int uBProjMatrix, uBModelMatrix, uTProjMatrix, uTModelMatrix, uTex;
 
 	Mesh circleOfDeathMesh, nextCircleMesh;
-	Mesh agentMesh, agentTargetingCircleMesh;
+	Mesh agentMesh, agentTargetingCircleMesh, agentHealthBackMesh, agentHealthFrontMesh;
 	Mesh lineMesh;
 	Mesh levelMesh;
 	std::vector<Vertex> linePoints;
 	
 	bool showTargetingLines;
 	bool showLevelWalkData;
+	bool showHealthBars;
 
 	void initOpenGL();
 	void loadShaders();
@@ -49,6 +50,7 @@ private:
 	void buildLevelMesh(const Level& level);
 	void drawLine(glm::vec2 start, glm::vec2 end, glm::vec4 colour); //this function doesn't actually draw a line, it just adds the line data to the batch to be drawn later
 	void drawLines();//this function takes the accumulated line data, and sends it off to the GPU to be drawn
+	void drawAgents(const AgentManager& manager);
 	void drawCircles(const Game& gameState);
 	void drawLevel(const Level& level, glm::mat4 projection);
 	glm::mat4 computeProjection();
@@ -62,4 +64,5 @@ public:
 	void draw(const Game& gameState, const Level& level, const AgentManager& manager);
 	void toggleShowTargetingLines();
 	void toggleShowLevelWalkData();
+	void toggleShowHealthBars();
 };
