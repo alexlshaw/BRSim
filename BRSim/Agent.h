@@ -8,6 +8,8 @@
 #include "Settings.h"
 
 const int AGENT_MAX_HEALTH = 100;
+const int AGENT_FLEE_HEALTH_THRESHOLD = 50;	//Agent will try to avoid fights while their health is below this amount
+const float AGENT_STOP_FLEE_CIRCLE_SIZE = 360.0f;	//Once the circle gets this small, agents will stop trying to run away from each other and just fight
 const float AGENT_MAX_ROTATE_SPEED = 90.0f;
 const float AGENT_MAX_SPEED = 20.0f;
 const float AGENT_SHOT_COOLDOWN = 1.0f;
