@@ -22,8 +22,9 @@ public:
 	float checkCollision(Bullet& bullet, Agent& agent, float frameTime);
 	void spawnAgents();
 private:
-	void killAgentsOutsideCircle(const Game& gameState);
+	void hurtAgentsOutsideCircle(const Game& gameState);
 	void killAgent(Agent& agent);
 	void updateAgentSightOfOtherAgents(Agent& agent);
 	Level& levelData;
+	float elapsedDamageTickTime;
 };

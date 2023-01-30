@@ -10,7 +10,12 @@ AgentManager::~AgentManager() {}
 
 void AgentManager::updateAgents(float frameTime, const Game& gameState)
 {
-	killAgentsOutsideCircle(gameState);
+	elapsedDamageTickTime += frameTime;
+	if (elapsedDamageTickTime > 1.0f)
+	{
+		elapsedDamageTickTime -= 1.0f;
+		hurtAgentsOutsideCircle(gameState);
+	}
 	for (auto& agent : agents)
 	{
 		if (agent.alive)
@@ -108,13 +113,17 @@ void AgentManager::spawnAgents()
 	}
 }
 
-void AgentManager::killAgentsOutsideCircle(const Game& gameState)
+void AgentManager::hurtAgentsOutsideCircle(const Game& gameState)
 {
 	for (auto& agent : agents)
 	{
 		if (glm::length(agent.pos - gameState.circleCentre) > gameState.circleRadius && agent.alive)
 		{
-			killAgent(agent);
+			agent.currentHealth -= gameState.circleDamageTick;
+			if (agent.currentHealth < 0.0f)
+			{
+				killAgent(agent);
+			}
 		}
 	}
 }
@@ -123,6 +132,7 @@ void AgentManager::killAgent(Agent& agent)
 {
 	if (agent.alive)	//sanity check
 	{
+		agent.currentHealth = 0.0f;
 		agent.alive = false;
 		agentsAlive--;
 		if (agentsAlive != 1)

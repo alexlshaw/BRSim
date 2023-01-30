@@ -3,6 +3,8 @@
 Game::Game(Level& level)
 	: levelData(level)
 {
+	circleNumber = 1;
+	circleDamageTick = 1.0f;
 	circleCentre = glm::vec2(level.width / 2.0f, level.height / 2.0f);
 	circleRadius = (float)glm::max<int>(level.width, level.height) * 1.5f;
 	previousCircleRadius = circleRadius;
@@ -49,6 +51,8 @@ void Game::newCircle()
 		}
 	}
 	elapsedShrinkTime = 0.0f;
+	circleNumber++;
+	circleDamageTick *= 2.0f;
 }
 
 bool Game::isPositionInsideNextCircle(glm::vec2 position) const
