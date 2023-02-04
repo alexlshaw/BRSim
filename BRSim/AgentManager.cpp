@@ -8,7 +8,7 @@ AgentManager::AgentManager(int agentCount, Level& level)
 
 AgentManager::~AgentManager() {}
 
-void AgentManager::updateAgents(float frameTime, const Game& gameState)
+void AgentManager::updateAgents(float frameTime, Game& gameState)
 {
 	elapsedDamageTickTime += frameTime;
 	if (elapsedDamageTickTime > 1.0f)
@@ -21,6 +21,8 @@ void AgentManager::updateAgents(float frameTime, const Game& gameState)
 		if (agent.alive)
 		{
 			updateAgentSightOfOtherAgents(agent);
+			updateAgentSightOfItems(agent, gameState);
+			checkPickups(agent, gameState);
 			agent.update(frameTime, gameState);
 			if (agent.firing)
 			{
@@ -94,6 +96,17 @@ float AgentManager::checkCollision(Bullet& bullet, Agent& agent, float frameTime
 	return 0.0f;
 }
 
+void AgentManager::checkPickups(Agent& agent, Game& gameState)
+{
+	for (auto& item : gameState.items)
+	{
+		if (item.available && glm::length(agent.pos - item.location) < ITEM_COLLISION_RADIUS)
+		{
+			item.onPickup(agent);
+		}
+	}
+}
+
 void AgentManager::spawnAgents()
 {
 	agents.reserve(agentsAlive);
@@ -119,7 +132,7 @@ void AgentManager::hurtAgentsOutsideCircle(const Game& gameState)
 	{
 		if (glm::length(agent.pos - gameState.circleCentre) > gameState.circleRadius && agent.alive)
 		{
-			agent.currentHealth -= gameState.circleDamageTick;
+			agent.currentHealth -= (int)gameState.circleDamageTick;
 			if (agent.currentHealth < 0.0f)
 			{
 				killAgent(agent);
@@ -132,7 +145,7 @@ void AgentManager::killAgent(Agent& agent)
 {
 	if (agent.alive)	//sanity check
 	{
-		agent.currentHealth = 0.0f;
+		agent.currentHealth = 0;
 		agent.alive = false;
 		agentsAlive--;
 		if (agentsAlive != 1)
@@ -167,6 +180,21 @@ void AgentManager::updateAgentSightOfOtherAgents(Agent& agent)
 			{
 				//printf("Agent %i sees agent %i\n", agent.id, otherAgent.id);
 				agent.otherVisibleAgents.push_back(otherAgent);
+			}
+		}
+	}
+}
+
+void AgentManager::updateAgentSightOfItems(Agent& agent, const Game& gameState)
+{
+	agent.visibleItems.clear();
+	for (auto& item : gameState.items)
+	{
+		if (item.available)
+		{
+			if (glm::length(agent.pos - item.location) < agent.range)
+			{
+				agent.visibleItems.push_back(item);
 			}
 		}
 	}

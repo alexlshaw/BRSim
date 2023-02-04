@@ -7,19 +7,10 @@
     <ClCompile Include="glad.c">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="Shader.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="Texture.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
     <ClCompile Include="Agent.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="AgentManager.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="Mesh.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="Bullet.cpp">
@@ -41,21 +32,30 @@
     <ClCompile Include="AIStateFighting.cpp">
       <Filter>Source Files\AI</Filter>
     </ClCompile>
+    <ClCompile Include="Mesh.cpp">
+      <Filter>Source Files\Graphics</Filter>
+    </ClCompile>
     <ClCompile Include="Renderer.cpp">
+      <Filter>Source Files\Graphics</Filter>
+    </ClCompile>
+    <ClCompile Include="Shader.cpp">
+      <Filter>Source Files\Graphics</Filter>
+    </ClCompile>
+    <ClCompile Include="Texture.cpp">
+      <Filter>Source Files\Graphics</Filter>
+    </ClCompile>
+    <ClCompile Include="MeshTools.cpp">
       <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="Item.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="AIStateFleeing.cpp">
+      <Filter>Source Files\AI</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Settings.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="Shader.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="Texture.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="Vertex.h">
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="Agent.h">
@@ -65,9 +65,6 @@
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="CStopWatch.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="Mesh.h">
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="Bullet.h">
@@ -88,28 +85,49 @@
     <ClInclude Include="AIStateFighting.h">
       <Filter>Header Files\AI</Filter>
     </ClInclude>
-    <ClInclude Include="Renderer.h">
+    <ClInclude Include="MeshTools.h">
       <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="Renderer.h">
+      <Filter>Header Files\Graphics</Filter>
+    </ClInclude>
+    <ClInclude Include="Mesh.h">
+      <Filter>Header Files\Graphics</Filter>
+    </ClInclude>
+    <ClInclude Include="Shader.h">
+      <Filter>Header Files\Graphics</Filter>
+    </ClInclude>
+    <ClInclude Include="Texture.h">
+      <Filter>Header Files\Graphics</Filter>
+    </ClInclude>
+    <ClInclude Include="Vertex.h">
+      <Filter>Header Files\Graphics</Filter>
+    </ClInclude>
+    <ClInclude Include="Item.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="AIStateFleeing.h">
+      <Filter>Header Files\AI</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <None Include="Data\Shaders\Basic.frag">
-      <Filter>Shaders</Filter>
+      <Filter>Data\Shaders</Filter>
     </None>
     <None Include="Data\Shaders\Basic.vert">
-      <Filter>Shaders</Filter>
+      <Filter>Data\Shaders</Filter>
     </None>
     <None Include="Data\Shaders\TexturedUnlit.frag">
-      <Filter>Shaders</Filter>
+      <Filter>Data\Shaders</Filter>
     </None>
     <None Include="Data\Shaders\TexturedUnlit.vert">
-      <Filter>Shaders</Filter>
+      <Filter>Data\Shaders</Filter>
     </None>
     <None Include="Data\Shaders\Agent.frag">
-      <Filter>Shaders</Filter>
+      <Filter>Data\Shaders</Filter>
     </None>
     <None Include="Data\Shaders\Agent.vert">
-      <Filter>Shaders</Filter>
+      <Filter>Data\Shaders</Filter>
     </None>
     <None Include="packages.config" />
   </ItemGroup>
@@ -120,14 +138,31 @@
     <Filter Include="Source Files">
       <UniqueIdentifier>{1e5ea0aa-92c5-4eb7-a34b-69036d422059}</UniqueIdentifier>
     </Filter>
-    <Filter Include="Shaders">
-      <UniqueIdentifier>{63fb00ec-f70a-40f3-b843-5f80ea03cb0f}</UniqueIdentifier>
-    </Filter>
     <Filter Include="Header Files\AI">
       <UniqueIdentifier>{083b1159-9674-42fc-a7d7-b90b27638f02}</UniqueIdentifier>
     </Filter>
     <Filter Include="Source Files\AI">
       <UniqueIdentifier>{04e61f71-101f-49aa-a407-110a1a710a2a}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Header Files\Graphics">
+      <UniqueIdentifier>{5336c7a7-4d57-47e8-a910-8ac140f3c610}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\Graphics">
+      <UniqueIdentifier>{20604530-3309-42a7-b546-0553a72ecbbd}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Data">
+      <UniqueIdentifier>{eac03020-3ba1-46e2-8ede-3df1fe4629b6}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Data\Shaders">
+      <UniqueIdentifier>{63fb00ec-f70a-40f3-b843-5f80ea03cb0f}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Data\Textures">
+      <UniqueIdentifier>{4871d4d6-d549-4780-b510-2b7d74c7829f}</UniqueIdentifier>
+    </Filter>
+  </ItemGroup>
+  <ItemGroup>
+    <Image Include="Data\Textures\Healthpack.png">
+      <Filter>Data\Textures</Filter>
+    </Image>
   </ItemGroup>
 </Project>

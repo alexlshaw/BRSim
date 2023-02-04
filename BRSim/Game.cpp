@@ -3,6 +3,7 @@
 Game::Game(Level& level)
 	: levelData(level)
 {
+	spawnItems();
 	circleNumber = 1;
 	circleDamageTick = 1.0f;
 	circleCentre = glm::vec2(level.width / 2.0f, level.height / 2.0f);
@@ -60,4 +61,22 @@ bool Game::isPositionInsideNextCircle(glm::vec2 position) const
 	float distanceToCentre = glm::length(position - nextCircleCentre);
 	return distanceToCentre < nextCircleRadius;
 
+}
+
+void Game::spawnItems()
+{
+	items.reserve(ITEM_COUNT);
+	for (int i = 0; i < ITEM_COUNT; i++)
+	{
+		bool valid = false;
+		glm::vec2 pos;
+		while (!valid)
+		{
+			float x = (float)(rand() % (int)levelData.width);
+			float y = (float)(rand() % (int)levelData.height);
+			pos = glm::vec2(x, y);
+			valid = levelData.getLevelInfo(x, y).walkable;
+		}
+		items.push_back(Item(pos));
+	}
 }

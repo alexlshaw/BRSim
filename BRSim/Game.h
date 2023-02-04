@@ -2,15 +2,18 @@
 
 #include <vector>
 #include "glm\gtx\compatibility.hpp"
+#include "Item.h"
 #include "Level.h"
 
-//Responsible for managing the gameplay stuff (tracking circles and other events)
+const int ITEM_COUNT = 20;
 
+//Responsible for managing the gameplay stuff (tracking circles and other events)
 class Game
 {
 private:
 	void newCircle();
 	int circleNumber;
+	void spawnItems();
 public:
 	Game(Level& level);
 	~Game();
@@ -21,4 +24,5 @@ public:
 	float elapsedShrinkTime = 0.0f;
 	Level& levelData;
 	float circleDamageTick;
+	std::vector<Item> items;
 };
