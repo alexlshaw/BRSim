@@ -20,8 +20,17 @@ void AIStateWandering::execute(Agent& owner, const Game& gameState, float frameT
 		}
 		return;	//Switching state deletes the state object, so we want to wrap up here
 	}
+	//2. Are we injured and able to see a health pack?
+	if (owner.currentHealth < AGENT_MAX_HEALTH)
+	{
+		//can we see a health pack?
+		if (owner.visibleItems.size() > 0)
+		{
+			owner.setTarget(owner.visibleItems[0].get().location);
+		}
+	}
 
-	//2. If not, continue moving until we reach target, then pick a new target
+	//3. If not, continue moving until we reach target, then pick a new target
 	if (owner.hasTarget)
 	{
 		checkAndMoveToTarget(owner, gameState, frameTime);

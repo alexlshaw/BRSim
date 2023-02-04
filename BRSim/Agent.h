@@ -5,6 +5,7 @@
 #include "AIState.h"
 #include "AIStateWandering.h"
 #include "Game.h"
+#include "Item.h"
 #include "Settings.h"
 
 const int AGENT_MAX_HEALTH = 100;
@@ -37,4 +38,5 @@ public:
 	AIState *currentState;
 	void update(float frameTime, const Game& gameState);
 	std::vector<std::reference_wrapper<Agent>> otherVisibleAgents;
+	std::vector<std::reference_wrapper<const Item>> visibleItems;
 };

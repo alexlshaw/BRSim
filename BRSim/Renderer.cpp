@@ -11,9 +11,11 @@ Renderer::Renderer(GLFWwindow* mainWindow, const Level& level)
 	windowOffsetAtPanStart = windowOffset;
 	initOpenGL();
 	loadShaders();
+	itemTex.loadFromPNG("Data/Textures/Healthpack.png");
 	buildCircleMeshes();
 	buildAgentMeshes();
 	buildLevelMesh(level);
+	buildItemMesh();
 }
 
 Renderer::~Renderer() {}
@@ -121,21 +123,10 @@ void Renderer::buildAgentMeshes()
 	}
 	agentTargetingCircleMesh.Load(vertices, indices);
 
-	//build the healthbar meshes (simple 2-triange quad)
+	//build the healthbar meshes (pair of quads)
 	vertices.clear();
 	indices.clear();
-	vertices.push_back(Vertex(glm::vec4(-12.0f, 0.0f, 0.0f, 1.0f), red));
-	vertices.push_back(Vertex(glm::vec4((float)12.0f, 0.0f, 0.0f, 1.0f), red));
-	vertices.push_back(Vertex(glm::vec4(-12.0f, (float)2.0f, 0.0f, 1.0f), red));
-	vertices.push_back(Vertex(glm::vec4((float)12.0f, 2.0f, 0.0f, 1.0f), red));
-	//first tri
-	indices.push_back(0);
-	indices.push_back(1);
-	indices.push_back(2);
-	//2nd tri
-	indices.push_back(1);
-	indices.push_back(3);
-	indices.push_back(2);
+	MeshTools::addQuad(&vertices, &indices, -12.0f, 0.0f, 24.0f, 2.0f, red);
 	agentHealthBackMesh.Load(vertices, indices);
 	//recolour to green for the front mesh
 	for (auto& vertex : vertices)
@@ -149,25 +140,16 @@ void Renderer::buildLevelMesh(const Level& level)
 {
 	std::vector<TVertex> vertices;
 	std::vector<unsigned int> indices;
-	//mesh is a simple 2-triangle quad
-	TVertex botLeft = TVertex(glm::vec4(0.0f, 0.0f, 0.0f, 1.0f), glm::vec2(0.0f, 0.0f));
-	TVertex botRight = TVertex(glm::vec4((float)level.width, 0.0f, 0.0f, 1.0f), glm::vec2(1.0f, 0.0f));
-	TVertex topLeft = TVertex(glm::vec4(0.0f, (float)level.height, 0.0f, 1.0f), glm::vec2(0.0f, 1.0f));
-	TVertex topRight = TVertex(glm::vec4((float)level.width, (float)level.height, 0.0f, 1.0f), glm::vec2(1.0f, 1.0f));
-	vertices.push_back(botLeft);
-	vertices.push_back(botRight);
-	vertices.push_back(topLeft);
-	vertices.push_back(topRight);
-	//first tri
-	indices.push_back(0);
-	indices.push_back(1);
-	indices.push_back(2);
-	//2nd tri
-	indices.push_back(1);
-	indices.push_back(3);
-	indices.push_back(2);
-
+	MeshTools::addQuad(&vertices, &indices, 0.0f, 0.0f, (float)level.width, (float)level.height);
 	levelMesh.Load(vertices, indices);
+}
+
+void Renderer::buildItemMesh()
+{
+	std::vector<TVertex> vertices;
+	std::vector<unsigned int> indices;
+	MeshTools::addQuad(&vertices, &indices, -8.0f, -8.0f, 8.0f, 8.0f);
+	itemMesh.Load(vertices, indices);
 }
 
 void Renderer::draw(const Game& gameState, const Level& level, const AgentManager& manager)
@@ -176,10 +158,14 @@ void Renderer::draw(const Game& gameState, const Level& level, const AgentManage
 	linePoints.clear();
 	glm::mat4 projection = computeProjection();
 
-	//first draw the level
-	drawLevel(level, projection);
+	//first draw the textured stuff
+	texturedUnlit->use();
+	texturedUnlit->setUniform(uTProjMatrix, projection);
+	texturedUnlit->setUniform(uTex, 0);
+	drawLevel(level);
+	drawItems(gameState);
 
-	//draw the agents (and everything else using the basic shader)
+	//draw the non-textured stuff
 	basic->use();
 	basic->setUniform(uBProjMatrix, projection);
 	drawAgents(manager);
@@ -293,11 +279,8 @@ void Renderer::drawCircles(const Game& gameState)
 	nextCircleMesh.draw(GL_LINE_LOOP);
 }
 
-void Renderer::drawLevel(const Level& level, glm::mat4 projection)
+void Renderer::drawLevel(const Level& level)
 {
-	texturedUnlit->use();
-	texturedUnlit->setUniform(uTProjMatrix, projection);
-	texturedUnlit->setUniform(uTex, 0);
 	glm::mat4 tr = glm::translate(glm::vec3(0.0f, 0.0f, 0.0f));
 	//set the shader's uniform
 	texturedUnlit->setUniform(uTModelMatrix, tr);
@@ -310,6 +293,20 @@ void Renderer::drawLevel(const Level& level, glm::mat4 projection)
 		level.tex->use();
 	}
 	levelMesh.draw();
+}
+
+void Renderer::drawItems(const Game& gameState)
+{
+	itemTex.use();
+	for (auto& item : gameState.items)
+	{
+		if (item.available)
+		{
+			glm::mat4 tr = glm::translate(glm::vec3(item.location.x, item.location.y, 0.0f));	//no need for rot/scale
+			texturedUnlit->setUniform(uTModelMatrix, tr);
+			itemMesh.draw();
+		}
+	}
 }
 
 glm::mat4 Renderer::computeProjection()

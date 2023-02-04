@@ -14,7 +14,7 @@ public:
 	AgentManager(int agentCount, Level& level);
 	~AgentManager();
 	std::vector<Agent> agents;
-	void updateAgents(float frameTime, const Game& gameState);
+	void updateAgents(float frameTime, Game& gameState);
 	void updateBullets(float frameTime);
 	void cancelAllAgentTargets();
 	int agentsAlive;
@@ -22,8 +22,11 @@ public:
 	float checkCollision(Bullet& bullet, Agent& agent, float frameTime);
 	void spawnAgents();
 private:
-	void killAgentsOutsideCircle(const Game& gameState);
+	void hurtAgentsOutsideCircle(const Game& gameState);
 	void killAgent(Agent& agent);
 	void updateAgentSightOfOtherAgents(Agent& agent);
+	void updateAgentSightOfItems(Agent& agent, const Game& gameState);
+	void checkPickups(Agent& agent, Game& gameState);
 	Level& levelData;
+	float elapsedDamageTickTime;
 };
