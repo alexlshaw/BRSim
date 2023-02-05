@@ -4,6 +4,7 @@
 #include "glm/glm.hpp"
 #include "AIState.h"
 #include "AIStateWandering.h"
+#include "Entity.h"
 #include "Game.h"
 #include "Item.h"
 #include "Settings.h"
@@ -16,12 +17,11 @@ const float AGENT_MAX_SPEED = 20.0f;
 const float AGENT_SHOT_COOLDOWN = 1.0f;
 const float AGENT_DEFAULT_RANGE = 60.0f;	//default 30
 
-class Agent
+class Agent : public Entity
 {
 public:
 	Agent(glm::vec2 position, float direction, int identity);
 	~Agent();
-	glm::vec2 pos;
 	float look;	//bearing of the agent's look direction (in radians)
 	float range;
 	float shotCooldownRemainingTime;
@@ -39,4 +39,5 @@ public:
 	void update(float frameTime, const Game& gameState);
 	std::vector<std::reference_wrapper<Agent>> otherVisibleAgents;
 	std::vector<std::reference_wrapper<const Item>> visibleItems;
+	bool activeAndAlive();
 };

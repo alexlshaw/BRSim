@@ -10,11 +10,11 @@ void AIState::setAgentState(Agent& owner, AIState* newState)
 
 void AIState::findTarget(Agent& owner, const Game& gameState)
 {
-	float distanceToNextCircleCentre = glm::length(owner.pos - gameState.nextCircleCentre);
+	float distanceToNextCircleCentre = glm::length(owner.position - gameState.nextCircleCentre);
 	if (distanceToNextCircleCentre > gameState.nextCircleRadius)
 	{
 		float targetDistance = distanceToNextCircleCentre - (0.95f * gameState.nextCircleRadius);
-		owner.setTarget(owner.pos + glm::normalize(gameState.nextCircleCentre - owner.pos) * targetDistance);
+		owner.setTarget(owner.position + glm::normalize(gameState.nextCircleCentre - owner.position) * targetDistance);
 	}
 	else
 	{

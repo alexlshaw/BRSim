@@ -61,13 +61,29 @@ void key_callback(GLFWwindow* window, int key, int scancode, int action, int mod
 	{
 		//reduce timestep
 		timeRate -= 1.0f;
-		printf("Decreasing time scale to %i\n", (int)timeRate);
+		if (timeRate == 0.0f)	//we just decreased from 1, we actually want to go to 0.5 here
+		{
+			timeRate = 0.5f;
+		}
+		else if (timeRate < 0.0f)	//we've just tried to go down from 0.5, or we were already paused
+		{
+			timeRate = 0.0f;
+		}
+		printf("Decreasing time scale to %.1f\n", timeRate);
 	}
 	if (key == GLFW_KEY_P && action == GLFW_PRESS)
 	{
 		//increase timestep
 		timeRate += 1.0f;
-		printf("Increasing time scale to %i\n", (int)timeRate);
+		if (timeRate == 1.0f) // we were paused, we actually want to go to 0.5 here
+		{
+			timeRate = 0.5f;
+		}
+		else if (timeRate == 1.5f)	//we were on 0.5, we actually want to go to 1 here
+		{
+			timeRate = 1.0f;
+		}
+		printf("Increasing time scale to %.1f\n", timeRate);
 	}
 }
 

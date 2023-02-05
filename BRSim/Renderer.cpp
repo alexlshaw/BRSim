@@ -173,7 +173,7 @@ void Renderer::draw(const Game& gameState, const Level& level, const AgentManage
 	//draw bullets
 	for (auto& bullet : manager.bullets)
 	{
-		drawLine(bullet.pos, bullet.pos + (bullet.dir * 2.0f), black);
+		drawLine(bullet.position, bullet.position + (bullet.dir * 2.0f), black);
 	}
 
 	//draw target lines
@@ -183,7 +183,7 @@ void Renderer::draw(const Game& gameState, const Level& level, const AgentManage
 		{
 			if (agent.hasTarget)
 			{
-				drawLine(agent.pos, agent.targetPosition, green);
+				drawLine(agent.position, agent.targetPosition, green);
 			}
 		}
 	}
@@ -228,36 +228,39 @@ void Renderer::drawAgents(const AgentManager& manager)
 {
 	for (auto& agent : manager.agents)
 	{
-		glm::mat4 tr = glm::translate(glm::vec3(agent.pos.x, agent.pos.y, 0.0f));
-		glm::mat4 rot = glm::rotate(agent.look, glm::vec3(0.0f, 0.0f, 1.0f));
-		glm::mat4 modelview = tr * rot;
-		basic->setUniform(uBModelMatrix, modelview);
-		if (agent.alive)
+		if (agent.enabled)
 		{
-			agentMesh.draw();
-
-			//draw targeting cicle
-			glm::mat4 sc = glm::scale(glm::vec3(agent.range, agent.range, agent.range));
-			modelview = tr * sc;
+			glm::mat4 tr = glm::translate(glm::vec3(agent.position.x, agent.position.y, 0.0f));
+			glm::mat4 rot = glm::rotate(agent.look, glm::vec3(0.0f, 0.0f, 1.0f));
+			glm::mat4 modelview = tr * rot;
 			basic->setUniform(uBModelMatrix, modelview);
-			agentTargetingCircleMesh.draw(GL_LINE_LOOP);
-
-			if (showHealthBars)
+			if (agent.alive)
 			{
-				//draw health bar
-				tr = glm::translate(glm::vec3(agent.pos.x, agent.pos.y - 10.0f, 0.0f));
-				modelview = tr;
-				basic->setUniform(uBModelMatrix, modelview);
-				agentHealthBackMesh.draw();
-				sc = glm::scale(glm::vec3((float)agent.currentHealth / (float)AGENT_MAX_HEALTH, 1.0f, 1.0f));
+				agentMesh.draw();
+
+				//draw targeting cicle
+				glm::mat4 sc = glm::scale(glm::vec3(agent.range, agent.range, agent.range));
 				modelview = tr * sc;
 				basic->setUniform(uBModelMatrix, modelview);
-				agentHealthFrontMesh.draw();
+				agentTargetingCircleMesh.draw(GL_LINE_LOOP);
+
+				if (showHealthBars)
+				{
+					//draw health bar
+					tr = glm::translate(glm::vec3(agent.position.x, agent.position.y - 10.0f, 0.0f));
+					modelview = tr;
+					basic->setUniform(uBModelMatrix, modelview);
+					agentHealthBackMesh.draw();
+					sc = glm::scale(glm::vec3((float)agent.currentHealth / (float)AGENT_MAX_HEALTH, 1.0f, 1.0f));
+					modelview = tr * sc;
+					basic->setUniform(uBModelMatrix, modelview);
+					agentHealthFrontMesh.draw();
+				}
 			}
-		}
-		else
-		{
-			agentMesh.draw(GL_LINE_LOOP);
+			else
+			{
+				agentMesh.draw(GL_LINE_LOOP);
+			}
 		}
 	}
 }
@@ -300,9 +303,9 @@ void Renderer::drawItems(const Game& gameState)
 	itemTex.use();
 	for (auto& item : gameState.items)
 	{
-		if (item.available)
+		if (item.enabled)
 		{
-			glm::mat4 tr = glm::translate(glm::vec3(item.location.x, item.location.y, 0.0f));	//no need for rot/scale
+			glm::mat4 tr = glm::translate(glm::vec3(item.position.x, item.position.y, 0.0f));	//no need for rot/scale
 			texturedUnlit->setUniform(uTModelMatrix, tr);
 			itemMesh.draw();
 		}

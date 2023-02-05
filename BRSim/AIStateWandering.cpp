@@ -26,7 +26,7 @@ void AIStateWandering::execute(Agent& owner, const Game& gameState, float frameT
 		//can we see a health pack?
 		if (owner.visibleItems.size() > 0)
 		{
-			owner.setTarget(owner.visibleItems[0].get().location);
+			owner.setTarget(owner.visibleItems[0].get().position);
 		}
 	}
 

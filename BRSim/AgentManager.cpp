@@ -18,7 +18,7 @@ void AgentManager::updateAgents(float frameTime, Game& gameState)
 	}
 	for (auto& agent : agents)
 	{
-		if (agent.alive)
+		if (agent.activeAndAlive())
 		{
 			updateAgentSightOfOtherAgents(agent);
 			updateAgentSightOfItems(agent, gameState);
@@ -26,7 +26,7 @@ void AgentManager::updateAgents(float frameTime, Game& gameState)
 			agent.update(frameTime, gameState);
 			if (agent.firing)
 			{
-				bullets.push_back(Bullet(agent.pos + 3.0f * agent.forward(), agent.forward(), 2.0f, agent.id));
+				bullets.push_back(Bullet(agent.position + 3.0f * agent.forward(), agent.forward(), 2.0f, agent.id));
 				agent.shotCooldownRemainingTime = AGENT_SHOT_COOLDOWN;
 				agent.firing = false;
 			}
@@ -42,7 +42,7 @@ void AgentManager::updateBullets(float frameTime)
 		int hitAgentIdx = -1;
 		for (unsigned int j = 0; j < agents.size(); j++)
 		{
-			if (agents[j].alive)
+			if (agents[j].activeAndAlive())
 			{
 				float t = checkCollision(bullet, agents[j], frameTime);
 				if (t != 0.0f && t < minHitT)
@@ -59,23 +59,22 @@ void AgentManager::updateBullets(float frameTime)
 			if (agents[hitAgentIdx].currentHealth <= 0)
 			{
 				killAgent(agents[hitAgentIdx]);
+				printf("Agent %i killed by agent %i.\n", agents[hitAgentIdx].id, bullet.ownerID);
 			}
 			bullet.hitTarget = true;
-			printf("Agent %i hit by shot fired by agent %i. Remaining HP: %i\n", agents[hitAgentIdx].id, bullet.ownerID, agents[hitAgentIdx].currentHealth);
 		}
 		bullet.life -= frameTime;
-		bullet.pos += bullet.dir * frameTime * BULLET_SPEED;
+		bullet.position += bullet.dir * frameTime * BULLET_SPEED;
 	}
 	auto it = std::remove_if(bullets.begin(), bullets.end(), [](Bullet& x) { return x.life <= 0.0f || x.hitTarget; });
 	bullets.erase(it, bullets.end());
 }
 
-//it seems bullets are behaving more like laser beams right now
 float AgentManager::checkCollision(Bullet& bullet, Agent& agent, float frameTime)
 {
-	glm::vec2 endPos = bullet.pos + bullet.dir * frameTime * BULLET_SPEED;
-	glm::vec2 trajectory = endPos - bullet.pos;
-	glm::vec2 AC = agent.pos - bullet.pos;
+	glm::vec2 endPos = bullet.position + bullet.dir * frameTime * BULLET_SPEED;
+	glm::vec2 trajectory = endPos - bullet.position;
+	glm::vec2 AC = agent.position - bullet.position;
 	//project AC onto trajectory
 	float pt = glm::dot(trajectory, AC) / glm::length(trajectory);
 	//make sure the target is actually along the section of the trajectory line that the bullet will travel in this frame
@@ -83,8 +82,8 @@ float AgentManager::checkCollision(Bullet& bullet, Agent& agent, float frameTime
 	{
 		return false;
 	}
-	glm::vec2 closestPoint = bullet.pos + pt * glm::normalize(trajectory);
-	if (glm::length(agent.pos - closestPoint) < AGENT_COLLISION_RADIUS)
+	glm::vec2 closestPoint = bullet.position + pt * glm::normalize(trajectory);
+	if (glm::length(agent.position - closestPoint) < AGENT_COLLISION_RADIUS)
 	{
 		if (bullet.ownerID == agent.id)
 		{
@@ -100,7 +99,7 @@ void AgentManager::checkPickups(Agent& agent, Game& gameState)
 {
 	for (auto& item : gameState.items)
 	{
-		if (item.available && glm::length(agent.pos - item.location) < ITEM_COLLISION_RADIUS)
+		if (item.enabled && glm::length(agent.position - item.position) < ITEM_COLLISION_RADIUS)
 		{
 			item.onPickup(agent);
 		}
@@ -130,7 +129,7 @@ void AgentManager::hurtAgentsOutsideCircle(const Game& gameState)
 {
 	for (auto& agent : agents)
 	{
-		if (glm::length(agent.pos - gameState.circleCentre) > gameState.circleRadius && agent.alive)
+		if (agent.activeAndAlive() && glm::length(agent.position - gameState.circleCentre) > gameState.circleRadius)
 		{
 			agent.currentHealth -= (int)gameState.circleDamageTick;
 			if (agent.currentHealth < 0.0f)
@@ -174,9 +173,9 @@ void AgentManager::updateAgentSightOfOtherAgents(Agent& agent)
 	for (auto& otherAgent : agents)
 	{
 		//for now, visibility is just a simple distance check
-		if (&otherAgent != &agent && otherAgent.alive)
+		if (&otherAgent != &agent && otherAgent.activeAndAlive())
 		{
-			if (glm::length(agent.pos - otherAgent.pos) < agent.range)
+			if (glm::length(agent.position - otherAgent.position) < agent.range)
 			{
 				//printf("Agent %i sees agent %i\n", agent.id, otherAgent.id);
 				agent.otherVisibleAgents.push_back(otherAgent);
@@ -190,9 +189,9 @@ void AgentManager::updateAgentSightOfItems(Agent& agent, const Game& gameState)
 	agent.visibleItems.clear();
 	for (auto& item : gameState.items)
 	{
-		if (item.available)
+		if (item.enabled)
 		{
-			if (glm::length(agent.pos - item.location) < agent.range)
+			if (glm::length(agent.position - item.position) < agent.range)
 			{
 				agent.visibleItems.push_back(item);
 			}

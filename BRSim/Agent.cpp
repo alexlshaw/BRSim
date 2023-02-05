@@ -1,9 +1,9 @@
 #include "Agent.h"
 
 Agent::Agent(glm::vec2 position, float direction, int identity)
+	:Entity(position)
 {
 	look = direction;
-	pos = position;
 	range = AGENT_DEFAULT_RANGE;
 	firing = false;
 	alive = true;
@@ -26,7 +26,7 @@ glm::vec2 Agent::forward()
 
 bool Agent::rotateTowards(glm::vec2 targetLocation, float deltaTime)
 {
-	glm::vec2 target = glm::normalize(targetLocation - pos);	//the direction vector the agent now wants
+	glm::vec2 target = glm::normalize(targetLocation - position);	//the direction vector the agent now wants
 	glm::vec2 fwd = forward();
 	float d = glm::dot(target, fwd);
 	if (d == 0.0f || glm::length(target - fwd) < 0.01f)	//if we are facing/very close to facing, the target, just stop there
@@ -56,16 +56,16 @@ bool Agent::rotateTowards(glm::vec2 targetLocation, float deltaTime)
 bool Agent::moveTowards(glm::vec2 targetLocation, float deltaTime)
 {
 	//simple case: we assume that if the agent is moving towards a point, it is ~facing that point
-	float len = glm::length(targetLocation - pos);
+	float len = glm::length(targetLocation - position);
 	float maxDistance = deltaTime * AGENT_MAX_SPEED;
 	if (len > maxDistance)
 	{
-		pos = pos + forward() * maxDistance;
+		position = position + forward() * maxDistance;
 		return false;
 	}
 	else
 	{
-		pos = targetLocation;
+		position = targetLocation;
 		return true;
 	}
 }
@@ -81,4 +81,9 @@ void Agent::update(float frameTime, const Game& gameState)
 	//update the agent's internal state, then figure out what it wants to do next
 	shotCooldownRemainingTime = glm::max<float>(0.0f, shotCooldownRemainingTime - frameTime);
 	currentState->execute(*this, gameState, frameTime);
+}
+
+bool Agent::activeAndAlive()
+{
+	return enabled && alive;
 }

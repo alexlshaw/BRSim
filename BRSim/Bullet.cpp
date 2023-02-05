@@ -1,8 +1,8 @@
 #include "Bullet.h"
 
 Bullet::Bullet(glm::vec2 position, glm::vec2 direction, float lifespan, int owner)
+	:Entity(position)
 {
-	pos = position;
 	dir = direction;
 	life = lifespan;
 	hitTarget = false;

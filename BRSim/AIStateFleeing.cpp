@@ -21,7 +21,7 @@ void AIStateFleeing::noNearbyEnemies(Agent& owner, const Game& gameState, float 
 	//we're injured, can we see a health pack?
 	if (owner.visibleItems.size() > 0)
 	{
-		owner.setTarget(owner.visibleItems[0].get().location);
+		owner.setTarget(owner.visibleItems[0].get().position);
 	}
 	//No enemies, do we have somewhere we want to be?
 	if (owner.hasTarget)
