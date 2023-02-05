@@ -65,6 +65,7 @@ bool Game::isPositionInsideNextCircle(glm::vec2 position) const
 
 void Game::spawnItems()
 {
+	healthpackBase = std::make_unique<Healthpack>("Healthpack.png");
 	items.reserve(ITEM_COUNT);
 	for (int i = 0; i < ITEM_COUNT; i++)
 	{
@@ -77,6 +78,7 @@ void Game::spawnItems()
 			pos = glm::vec2(x, y);
 			valid = levelData.getLevelInfo(x, y).walkable;
 		}
-		items.push_back(Item(pos));
+		ItemInstance newItem = ItemInstance(*healthpackBase, pos);
+		items.push_back(newItem);
 	}
 }

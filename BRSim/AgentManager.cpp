@@ -1,10 +1,7 @@
 #include "AgentManager.h"
 
 AgentManager::AgentManager(int agentCount, Level& level)
-	: levelData(level)
-{
-	agentsAlive = agentCount;
-}
+	: levelData(level), agentsAlive(agentCount), elapsedDamageTickTime(0.0f) {}
 
 AgentManager::~AgentManager() {}
 

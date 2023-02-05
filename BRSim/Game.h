@@ -1,8 +1,10 @@
 #pragma once
 
 #include <vector>
+#include <memory>
 #include "glm\gtx\compatibility.hpp"
-#include "Item.h"
+#include "ItemInstance.h"
+#include "Healthpack.h"
 #include "Level.h"
 
 const int ITEM_COUNT = 20;
@@ -11,6 +13,7 @@ const int ITEM_COUNT = 20;
 class Game
 {
 private:
+	std::unique_ptr<Healthpack> healthpackBase;
 	void newCircle();
 	int circleNumber;
 	void spawnItems();
@@ -24,5 +27,5 @@ public:
 	float elapsedShrinkTime = 0.0f;
 	Level& levelData;
 	float circleDamageTick;
-	std::vector<Item> items;
+	std::vector<ItemInstance> items;
 };
