@@ -49,6 +49,10 @@ void key_callback(GLFWwindow* window, int key, int scancode, int action, int mod
 	{
 		renderer->toggleShowTargetingLines();
 	}
+	if (key == GLFW_KEY_V && action == GLFW_PRESS)
+	{
+		renderer->toggleShowRangeAndVision();
+	}
 	if (key == GLFW_KEY_W && action == GLFW_PRESS)
 	{
 		renderer->toggleShowLevelWalkData();

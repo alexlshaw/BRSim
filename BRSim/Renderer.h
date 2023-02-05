@@ -45,6 +45,7 @@ private:
 	bool showTargetingLines;
 	bool showLevelWalkData;
 	bool showHealthBars;
+	bool showRangeAndVision;
 
 	void initOpenGL();
 	void loadShaders();
@@ -70,4 +71,5 @@ public:
 	void toggleShowTargetingLines();
 	void toggleShowLevelWalkData();
 	void toggleShowHealthBars();
+	void toggleShowRangeAndVision();
 };

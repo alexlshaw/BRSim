@@ -15,7 +15,8 @@ const float AGENT_STOP_FLEE_CIRCLE_SIZE = 360.0f;	//Once the circle gets this sm
 const float AGENT_MAX_ROTATE_SPEED = 90.0f;
 const float AGENT_MAX_SPEED = 20.0f;
 const float AGENT_SHOT_COOLDOWN = 1.0f;
-const float AGENT_DEFAULT_RANGE = 60.0f;	//default 30
+const float AGENT_WEAPON_RANGE = 60.0f;
+const float AGENT_VISIBILITY_RANGE = 100.0f;
 
 class Agent : public Entity
 {

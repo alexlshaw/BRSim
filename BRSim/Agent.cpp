@@ -4,7 +4,7 @@ Agent::Agent(glm::vec2 position, float direction, int identity)
 	:Entity(position)
 {
 	look = direction;
-	range = AGENT_DEFAULT_RANGE;
+	range = AGENT_WEAPON_RANGE;
 	firing = false;
 	alive = true;
 	hasTarget = false;

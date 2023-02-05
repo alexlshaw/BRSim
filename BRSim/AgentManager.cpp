@@ -175,7 +175,7 @@ void AgentManager::updateAgentSightOfOtherAgents(Agent& agent)
 		//for now, visibility is just a simple distance check
 		if (&otherAgent != &agent && otherAgent.activeAndAlive())
 		{
-			if (glm::length(agent.position - otherAgent.position) < agent.range)
+			if (glm::length(agent.position - otherAgent.position) < AGENT_VISIBILITY_RANGE)
 			{
 				//printf("Agent %i sees agent %i\n", agent.id, otherAgent.id);
 				agent.otherVisibleAgents.push_back(otherAgent);
@@ -191,7 +191,7 @@ void AgentManager::updateAgentSightOfItems(Agent& agent, const Game& gameState)
 	{
 		if (item.enabled)
 		{
-			if (glm::length(agent.position - item.position) < agent.range)
+			if (glm::length(agent.position - item.position) < AGENT_VISIBILITY_RANGE)
 			{
 				agent.visibleItems.push_back(item);
 			}

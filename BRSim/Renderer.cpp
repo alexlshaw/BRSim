@@ -238,20 +238,26 @@ void Renderer::drawAgents(const AgentManager& manager)
 			{
 				agentMesh.draw();
 
-				//draw targeting cicle
-				glm::mat4 sc = glm::scale(glm::vec3(agent.range, agent.range, agent.range));
-				modelview = tr * sc;
-				basic->setUniform(uBModelMatrix, modelview);
-				agentTargetingCircleMesh.draw(GL_LINE_LOOP);
-
+				//draw targeting cicles
+				if (showRangeAndVision)
+				{
+					glm::mat4 sc = glm::scale(glm::vec3(agent.range, agent.range, agent.range));
+					modelview = tr * sc;
+					basic->setUniform(uBModelMatrix, modelview);
+					agentTargetingCircleMesh.draw(GL_LINE_LOOP);
+					sc = glm::scale(glm::vec3(AGENT_VISIBILITY_RANGE, AGENT_VISIBILITY_RANGE, AGENT_VISIBILITY_RANGE));
+					modelview = tr * sc;
+					basic->setUniform(uBModelMatrix, modelview);
+					agentTargetingCircleMesh.draw(GL_LINE_LOOP);
+				}
+				//draw health bars
 				if (showHealthBars)
 				{
-					//draw health bar
 					tr = glm::translate(glm::vec3(agent.position.x, agent.position.y - 10.0f, 0.0f));
 					modelview = tr;
 					basic->setUniform(uBModelMatrix, modelview);
 					agentHealthBackMesh.draw();
-					sc = glm::scale(glm::vec3((float)agent.currentHealth / (float)AGENT_MAX_HEALTH, 1.0f, 1.0f));
+					glm::mat4 sc = glm::scale(glm::vec3((float)agent.currentHealth / (float)AGENT_MAX_HEALTH, 1.0f, 1.0f));
 					modelview = tr * sc;
 					basic->setUniform(uBModelMatrix, modelview);
 					agentHealthFrontMesh.draw();
@@ -341,4 +347,9 @@ void Renderer::toggleShowLevelWalkData()
 void Renderer::toggleShowHealthBars()
 {
 	showHealthBars = !showHealthBars;
+}
+
+void Renderer::toggleShowRangeAndVision()
+{
+	showRangeAndVision = !showRangeAndVision;
 }
