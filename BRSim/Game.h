@@ -5,15 +5,19 @@
 #include "glm\gtx\compatibility.hpp"
 #include "ItemInstance.h"
 #include "Healthpack.h"
+#include "BodyArmour.h"
 #include "Level.h"
 
-const int ITEM_COUNT = 20;
+const int HEALTHPACK_COUNT = 20;
+const int ARMOUR_COUNT = 15;
+const float CIRCLE_SHRINK_TIME = 20.0f;		//default 20
 
 //Responsible for managing the gameplay stuff (tracking circles and other events)
 class Game
 {
 private:
 	std::unique_ptr<Healthpack> healthpackBase;
+	std::unique_ptr<BodyArmour> bodyArmourBase;
 	void newCircle();
 	int circleNumber;
 	void spawnItems();

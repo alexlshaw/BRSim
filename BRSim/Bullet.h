@@ -3,16 +3,18 @@
 #include "glm/glm.hpp"
 #include "Entity.h"
 
-const int BULLET_BASE_DAMAGE = 20;
+const float BULLET_BASE_DAMAGE = 20.0f;
+const float BULLET_SPEED = 100.0f;
 
 class Bullet : public Entity
 {
-public:
-	Bullet(glm::vec2 position, glm::vec2 direction, float lifespan, int owner);
-	glm::vec2 dir;
+private:
 	float life;
+public:
+	glm::vec2 direction;
 	bool hitTarget;
 	int ownerID;
-	int damage;
-private:
+	float damage;
+	Bullet(glm::vec2 position, glm::vec2 direction, float lifespan, int owner);
+	void update(float frameTime);
 };

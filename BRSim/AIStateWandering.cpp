@@ -20,13 +20,42 @@ void AIStateWandering::execute(Agent& owner, const Game& gameState, float frameT
 		}
 		return;	//Switching state deletes the state object, so we want to wrap up here
 	}
-	//2. Are we injured and able to see a health pack?
-	if (owner.currentHealth < AGENT_MAX_HEALTH)
+	//2. Are there any interesting items nearby?
+	if (owner.visibleItems.size() > 0)
 	{
-		//can we see a health pack?
-		if (owner.visibleItems.size() > 0)
+		int priorityItemIndex = -1;
+		float itemPriority = -1.0f;
+		for (unsigned int i = 0; i < owner.visibleItems.size(); i++)
 		{
-			owner.setTarget(owner.visibleItems[0].get().position);
+			const ItemInstance& item = owner.visibleItems[i].get();
+			float distanceFactor = computeItemDistancePriority(owner, item);
+			float typeFactor = 0.0f;
+			switch (item.baseItem.itemType)
+			{
+			case HEALTHPACK:
+				//the more injured we are, the more of a priority a healthpack is
+				typeFactor = computeHealthPriority(owner);
+				break;
+			case BODYARMOUR:
+				//The more armour we're missing, the more we value it.
+				typeFactor = computeArmourPriority(owner);
+				break;
+			default:
+				//TODO: gun priority decreases the more we value health or armour, and changes based on how well equipped we already are
+				typeFactor = 0.2f;
+				break;
+			}
+			float priority = distanceFactor + typeFactor;
+			if (typeFactor > 0.1f && priority > itemPriority)	//Only grab the item if something we care about
+			{
+				itemPriority = priority;
+				priorityItemIndex = i;
+			}
+		}
+		if (priorityItemIndex != -1.0f)
+		{
+			//we found an item that's worth our time, go for it
+			owner.setTarget(owner.visibleItems[priorityItemIndex].get().position);
 		}
 	}
 

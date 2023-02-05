@@ -10,9 +10,8 @@ class Agent;
 
 class ItemInstance : public Entity
 {
-private:
-	Item& baseItem;
 public:
+	Item& baseItem;
 	ItemInstance(Item& baseItem, glm::vec2 position);
 	void onPickup(Agent& agent);
 };

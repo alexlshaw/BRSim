@@ -1,19 +1,20 @@
 #include "Agent.h"
 
 Agent::Agent(glm::vec2 position, float direction, int identity)
-	:Entity(position)
+	:Entity(position), 
+	look(direction), 
+	range(AGENT_WEAPON_RANGE), 
+	firing(false), 
+	alive(true), 
+	hasTarget(false),
+	targetPosition(position),
+	id(identity),
+	shotCooldownRemainingTime(0.0f),
+	currentHealth(AGENT_MAX_HEALTH),
+	currentArmour(0),
+	currentState(static_cast<AIState*>(new AIStateWandering()))
 {
-	look = direction;
-	range = AGENT_WEAPON_RANGE;
-	firing = false;
-	alive = true;
-	hasTarget = false;
-	targetPosition = position;
-	id = identity;
-	shotCooldownRemainingTime = 0.0f;
-	currentHealth = AGENT_MAX_HEALTH;
 	//TODO: This currently leaks memory -> AI state on game end not deleted. Currently a non-issue in that game end also means process end, but should fix
-	currentState = static_cast<AIState*>(new AIStateWandering());
 }
 
 Agent::~Agent() {}

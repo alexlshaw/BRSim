@@ -59,3 +59,29 @@ void AIState::checkAndMoveToTarget(Agent& owner, const Game& gameState, float fr
 		printf("Agent %i trying to move to non-existent target\n", owner.id);
 	}
 }
+
+//How importance is picking up an item based on its current distance? (Range 0...1)
+//This should range from 1.0 if the item is co-located with the agent, to 0.0 if the item is at the agent's maximum view range
+float AIState::computeItemDistancePriority(const Agent& owner, const ItemInstance& item)
+{
+	float distance = glm::length(owner.position - item.position);
+	return (AGENT_VISIBILITY_RANGE - distance) / AGENT_VISIBILITY_RANGE;
+}
+
+//how important are health pickups for us? (Range 0...1)
+float AIState::computeHealthPriority(const Agent& owner)
+{
+	//how much would a healthpack give the agent right now?
+	float possibleHeal = glm::min<float>(AGENT_MAX_HEALTH - owner.currentHealth, HEALTHPACK_HEAL_AMOUNT);
+	return possibleHeal / AGENT_MAX_HEALTH;
+}
+
+//how important are armour pickups for us? (Range 0...0.5)
+//Armour priority caps at 0.5f because it only protects with 50% efficiency
+//So the equivalent value of health will be valued twice as much
+float AIState::computeArmourPriority(const Agent& owner)
+{
+	//how much would a body armour give right now?
+	float possibleArmour = glm::min<float>(AGENT_MAX_ARMOUR - owner.currentArmour, BODYARMOUR_ARMOUR_AMOUNT);
+	return possibleArmour / AGENT_MAX_ARMOUR * 0.5f;
+}

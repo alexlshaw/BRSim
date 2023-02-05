@@ -18,10 +18,39 @@ void AIStateFleeing::execute(Agent& owner, const Game& gameState, float frameTim
 
 void AIStateFleeing::noNearbyEnemies(Agent& owner, const Game& gameState, float frameTime)
 {
-	//we're injured, can we see a health pack?
+	//we're injured, are there items available?
 	if (owner.visibleItems.size() > 0)
 	{
-		owner.setTarget(owner.visibleItems[0].get().position);
+		int priorityItemIndex = -1;
+		float itemPriority = -1.0f;
+		for (unsigned int i = 0; i < owner.visibleItems.size(); i++)
+		{
+			const ItemInstance& item = owner.visibleItems[i].get();
+			float distanceFactor = computeItemDistancePriority(owner, item);
+			float typeFactor = 0.0f;
+			switch (item.baseItem.itemType)
+			{
+			case HEALTHPACK:
+				//the more injured we are, the more of a priority a healthpack is. Range 0...1
+				typeFactor = computeHealthPriority(owner);
+				break;
+			case BODYARMOUR:
+				//The more armour we're missing, the more we value it. But only at half the relative value of health. Range 0...0.5
+				typeFactor = computeArmourPriority(owner);
+				break;
+			default:
+				//any guns are low priority while we're fleeing
+				typeFactor = 0.1f;
+				break;
+			}
+			float priority = distanceFactor + typeFactor;
+			if (priority > itemPriority)
+			{
+				itemPriority = priority;
+				priorityItemIndex = i;
+			}
+		}
+		owner.setTarget(owner.visibleItems[priorityItemIndex].get().position);
 	}
 	//No enemies, do we have somewhere we want to be?
 	if (owner.hasTarget)

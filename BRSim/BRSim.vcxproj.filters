@@ -50,6 +50,9 @@
     <ClCompile Include="Healthpack.cpp">
       <Filter>Source Files\Items</Filter>
     </ClCompile>
+	<ClCompile Include="BodyArmour.cpp">
+      <Filter>Source Files\Items</Filter>
+    </ClCompile>
     <ClCompile Include="ItemInstance.cpp">
       <Filter>Source Files\Entities</Filter>
     </ClCompile>
@@ -110,6 +113,9 @@
       <Filter>Header Files\AI</Filter>
     </ClInclude>
     <ClInclude Include="Healthpack.h">
+      <Filter>Header Files\Items</Filter>
+    </ClInclude>
+	<ClInclude Include="BodyArmour.h">
       <Filter>Header Files\Items</Filter>
     </ClInclude>
     <ClInclude Include="Item.h">
@@ -191,7 +197,19 @@
     </Filter>
   </ItemGroup>
   <ItemGroup>
-    <Image Include="Data\Textures\Healthpack.png">
+    <Image Include="Data\Textures\BodyArmour.png">
+      <Filter>Data\Textures</Filter>
+    </Image>
+	<Image Include="Data\Textures\Gun-AssaultRifle.png">
+      <Filter>Data\Textures</Filter>
+    </Image>
+	<Image Include="Data\Textures\Gun-Pistol.png">
+      <Filter>Data\Textures</Filter>
+    </Image>
+	<Image Include="Data\Textures\Gun-SniperRifle.png">
+      <Filter>Data\Textures</Filter>
+    </Image>
+	<Image Include="Data\Textures\Healthpack.png">
       <Filter>Data\Textures</Filter>
     </Image>
   </ItemGroup>

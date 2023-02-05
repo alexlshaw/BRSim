@@ -1,17 +1,16 @@
 #include "Renderer.h"
 
 Renderer::Renderer(GLFWwindow* mainWindow, const Level& level)
+	:mainWindow(mainWindow),
+	showLevelWalkData(false),
+	showTargetingLines(false),
+	showHealthBars(true),
+	zoomLevel(1.0f),
+	windowOffset(glm::vec2(0.0f, 0.0f)),
+	windowOffsetAtPanStart(windowOffset)
 {
-	this->mainWindow = mainWindow;
-	showLevelWalkData = false;
-	showTargetingLines = false;
-	showHealthBars = true;
-	zoomLevel = 1.0f;
-	windowOffset = glm::vec2(0.0f, 0.0f);
-	windowOffsetAtPanStart = windowOffset;
 	initOpenGL();
 	loadShaders();
-	itemTex.loadFromPNG("Data/Textures/Healthpack.png");
 	buildCircleMeshes();
 	buildAgentMeshes();
 	buildLevelMesh(level);
@@ -134,6 +133,12 @@ void Renderer::buildAgentMeshes()
 		vertex.color = green;
 	}
 	agentHealthFrontMesh.Load(vertices, indices);
+	//recolour to grey for the armour
+	for (auto& vertex : vertices)
+	{
+		vertex.color = midGrey;
+	}
+	agentArmourMesh.Load(vertices, indices);
 }
 
 void Renderer::buildLevelMesh(const Level& level)
@@ -173,7 +178,7 @@ void Renderer::draw(const Game& gameState, const Level& level, const AgentManage
 	//draw bullets
 	for (auto& bullet : manager.bullets)
 	{
-		drawLine(bullet.position, bullet.position + (bullet.dir * 2.0f), black);
+		drawLine(bullet.position, bullet.position + (bullet.direction * 2.0f), black);
 	}
 
 	//draw target lines
@@ -261,6 +266,15 @@ void Renderer::drawAgents(const AgentManager& manager)
 					modelview = tr * sc;
 					basic->setUniform(uBModelMatrix, modelview);
 					agentHealthFrontMesh.draw();
+					//now the shield, slightly below
+					if (agent.currentArmour > 0)
+					{
+						tr = glm::translate(glm::vec3(agent.position.x, agent.position.y - 12.0f, 0.0f));
+						sc = glm::scale(glm::vec3((float)agent.currentArmour / (float)AGENT_MAX_ARMOUR, 1.0f, 1.0f));
+						modelview = tr * sc;
+						basic->setUniform(uBModelMatrix, modelview);
+						agentArmourMesh.draw();
+					}
 				}
 			}
 			else
@@ -306,11 +320,11 @@ void Renderer::drawLevel(const Level& level)
 
 void Renderer::drawItems(const Game& gameState)
 {
-	itemTex.use();
 	for (auto& item : gameState.items)
 	{
 		if (item.enabled)
 		{
+			item.baseItem.pickupTexture.use();
 			glm::mat4 tr = glm::translate(glm::vec3(item.position.x, item.position.y, 0.0f));	//no need for rot/scale
 			texturedUnlit->setUniform(uTModelMatrix, tr);
 			itemMesh.draw();

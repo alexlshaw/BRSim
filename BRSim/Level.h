@@ -3,8 +3,9 @@
 #include <string>
 
 #include "glm\glm.hpp"
-#include "Settings.h"
 #include "Texture.h"
+
+const bool LOAD_LEVEL_SURFACE_DATA = true;
 
 class LevelData
 {

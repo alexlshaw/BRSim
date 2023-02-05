@@ -7,10 +7,10 @@
 #include "Entity.h"
 #include "Game.h"
 #include "ItemInstance.h"
-#include "Settings.h"
 
-const int AGENT_MAX_HEALTH = 100;
-const int AGENT_FLEE_HEALTH_THRESHOLD = 50;	//Agent will try to avoid fights while their health is below this amount
+const float AGENT_MAX_HEALTH = 100.0f;
+const float AGENT_MAX_ARMOUR = 100.0f;
+const float AGENT_FLEE_HEALTH_THRESHOLD = 50.0f;	//Agent will try to avoid fights while their health is below this amount
 const float AGENT_STOP_FLEE_CIRCLE_SIZE = 360.0f;	//Once the circle gets this small, agents will stop trying to run away from each other and just fight
 const float AGENT_MAX_ROTATE_SPEED = 90.0f;
 const float AGENT_MAX_SPEED = 20.0f;
@@ -28,7 +28,8 @@ public:
 	float shotCooldownRemainingTime;
 	bool firing;	//Whether the agent should spawn a bullet on this/the next frame
 	bool alive;
-	int currentHealth;
+	float currentHealth;
+	float currentArmour;
 	int id;
 	glm::vec2 forward();
 	bool hasTarget;

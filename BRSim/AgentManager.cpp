@@ -49,27 +49,21 @@ void AgentManager::updateBullets(float frameTime)
 				}
 			}
 		}
-		//if we ended up hitting an agent, kill it
+		//If we've hit something, process the hit
 		if (hitAgentIdx != -1)
 		{
-			agents[hitAgentIdx].currentHealth -= bullet.damage;
-			if (agents[hitAgentIdx].currentHealth <= 0)
-			{
-				killAgent(agents[hitAgentIdx]);
-				printf("Agent %i killed by agent %i.\n", agents[hitAgentIdx].id, bullet.ownerID);
-			}
-			bullet.hitTarget = true;
+			hitAgentWithBullet(agents[hitAgentIdx], bullet);
 		}
-		bullet.life -= frameTime;
-		bullet.position += bullet.dir * frameTime * BULLET_SPEED;
+		//update position and other bullet internals
+		bullet.update(frameTime);
 	}
-	auto it = std::remove_if(bullets.begin(), bullets.end(), [](Bullet& x) { return x.life <= 0.0f || x.hitTarget; });
+	auto it = std::remove_if(bullets.begin(), bullets.end(), [](Bullet& x) { return !x.enabled; });
 	bullets.erase(it, bullets.end());
 }
 
 float AgentManager::checkCollision(Bullet& bullet, Agent& agent, float frameTime)
 {
-	glm::vec2 endPos = bullet.position + bullet.dir * frameTime * BULLET_SPEED;
+	glm::vec2 endPos = bullet.position + bullet.direction * frameTime * BULLET_SPEED;
 	glm::vec2 trajectory = endPos - bullet.position;
 	glm::vec2 AC = agent.position - bullet.position;
 	//project AC onto trajectory
@@ -120,6 +114,21 @@ void AgentManager::spawnAgents()
 		Agent a = Agent(pos, glm::radians((float)(rand() % 360)), i);
 		agents.push_back(a);
 	}
+}
+
+void AgentManager::hitAgentWithBullet(Agent& agent, Bullet& bullet)
+{
+	//Armour will absorb up to 50% of the bullet's damage
+	float armourDamage = glm::min<float>(agent.currentArmour, bullet.damage * 0.5f);
+	float healthDamage = bullet.damage - armourDamage;
+	agent.currentArmour -= armourDamage;
+	agent.currentHealth -= healthDamage;
+	if (agent.currentHealth <= 0)
+	{
+		killAgent(agent);
+		printf("Agent %i killed by agent %i.\n", agent.id, bullet.ownerID);
+	}
+	bullet.hitTarget = true;
 }
 
 void AgentManager::hurtAgentsOutsideCircle(const Game& gameState)

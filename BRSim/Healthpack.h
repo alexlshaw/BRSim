@@ -1,13 +1,11 @@
 #pragma once
 
 #include "Item.h"
-#include "Texture.h"
-#include <stdio.h>
 #include <string>
 
-const int HEALTHPACK_HEAL_AMOUNT = 80;
+const float HEALTHPACK_HEAL_AMOUNT = 80.0f;
 
-class Agent;
+class Agent;	//forward dec
 
 class Healthpack : public Item
 {

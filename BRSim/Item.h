@@ -14,11 +14,21 @@ class Agent;
 
 const float ITEM_COLLISION_RADIUS = 4.0f;
 
+//Item classifications for the AI's convenience
+enum ItemType
+{
+	HEALTHPACK = 0,
+	BODYARMOUR = 1,
+	GUN_PISTOL = 3,
+	GUN_ASSAULTRIFLE = 4,
+	GUN_SNIPERRIFLE = 5
+};
+
 class Item
 {
-private:
-	Texture pickupTexture;
 public:
-	Item(std::string textureName);
+	ItemType itemType;
+	Texture pickupTexture;
+	Item(std::string textureName, ItemType itemType);
 	virtual void onPickup(Agent& agent) = 0;
 };
