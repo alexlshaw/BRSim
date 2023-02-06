@@ -31,6 +31,7 @@ private:
 	void updateAgentSightOfOtherAgents(Agent& agent);
 	void updateAgentSightOfItems(Agent& agent, const Game& gameState);
 	void checkPickups(Agent& agent, Game& gameState);
+	void fireBullet(Agent& shooter);
 	Level& levelData;
 	float elapsedDamageTickTime;
 };

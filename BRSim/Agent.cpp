@@ -2,11 +2,10 @@
 
 Agent::Agent(glm::vec2 position, float direction, int identity)
 	:Entity(position), 
-	look(direction), 
-	range(AGENT_WEAPON_RANGE), 
+	look(direction),
 	firing(false), 
 	alive(true), 
-	hasTarget(false),
+	currentTargetType(TargetType::none),
 	targetPosition(position),
 	id(identity),
 	shotCooldownRemainingTime(0.0f),
@@ -71,10 +70,10 @@ bool Agent::moveTowards(glm::vec2 targetLocation, float deltaTime)
 	}
 }
 
-void Agent::setTarget(glm::vec2 target)
+void Agent::setTarget(glm::vec2 target, TargetType targetType)
 {
 	targetPosition = target;
-	hasTarget = true;
+	currentTargetType = targetType;
 }
 
 void Agent::update(float frameTime, const Game& gameState)

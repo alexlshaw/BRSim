@@ -23,12 +23,23 @@ void AgentManager::updateAgents(float frameTime, Game& gameState)
 			agent.update(frameTime, gameState);
 			if (agent.firing)
 			{
-				bullets.push_back(Bullet(agent.position + 3.0f * agent.forward(), agent.forward(), 2.0f, agent.id));
-				agent.shotCooldownRemainingTime = AGENT_SHOT_COOLDOWN;
-				agent.firing = false;
+				fireBullet(agent);
 			}
 		}
 	}
+}
+
+void AgentManager::fireBullet(Agent& shooter)
+{
+	Bullet shot(shooter.position + 3.0f * shooter.forward(),
+		shooter.forward(),
+		shooter.id,
+		shooter.currentWeapon.range,
+		shooter.currentWeapon.bulletDamage,
+		shooter.currentWeapon.bulletSpeed);
+	bullets.push_back(shot);
+	shooter.shotCooldownRemainingTime = shooter.currentWeapon.timeBetweenShots;
+	shooter.firing = false;
 }
 
 void AgentManager::updateBullets(float frameTime)
@@ -63,7 +74,8 @@ void AgentManager::updateBullets(float frameTime)
 
 float AgentManager::checkCollision(Bullet& bullet, Agent& agent, float frameTime)
 {
-	glm::vec2 endPos = bullet.position + bullet.direction * frameTime * BULLET_SPEED;
+	//we want to compute the line of the bullet's travel this frame, and determine whether this line will pass through something
+	glm::vec2 endPos = bullet.position + bullet.direction * frameTime * bullet.bulletSpeed;
 	glm::vec2 trajectory = endPos - bullet.position;
 	glm::vec2 AC = agent.position - bullet.position;
 	//project AC onto trajectory
@@ -168,7 +180,7 @@ void AgentManager::cancelAllAgentTargets()
 {
 	for (auto& agent : agents)
 	{
-		agent.hasTarget = false;
+		agent.currentTargetType = TargetType::none;
 	}
 }
 

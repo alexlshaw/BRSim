@@ -2,7 +2,7 @@
 #include "Agent.h"
 
 BodyArmour::BodyArmour(std::string textureName)
-	:Item(textureName, BODYARMOUR) {}
+	:Item(textureName, ItemType::bodyArmour) {}
 
 void BodyArmour::onPickup(Agent& agent)
 {

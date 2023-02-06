@@ -15,13 +15,13 @@ class Agent;
 const float ITEM_COLLISION_RADIUS = 4.0f;
 
 //Item classifications for the AI's convenience
-enum ItemType
+enum class ItemType
 {
-	HEALTHPACK = 0,
-	BODYARMOUR = 1,
-	GUN_PISTOL = 3,
-	GUN_ASSAULTRIFLE = 4,
-	GUN_SNIPERRIFLE = 5
+	healthpack,
+	bodyArmour,
+	gunPistol,
+	gunAssaultRifle,
+	gunSniperRifle
 };
 
 class Item

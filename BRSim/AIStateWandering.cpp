@@ -8,7 +8,7 @@ void AIStateWandering::execute(Agent& owner, const Game& gameState, float frameT
 	//1. Switch to fighting if enemies nearby
 	if (!owner.otherVisibleAgents.empty())
 	{
-		if (owner.currentHealth > AGENT_FLEE_HEALTH_THRESHOLD || gameState.circleRadius <= AGENT_STOP_FLEE_CIRCLE_SIZE)
+		if ((owner.currentHealth > AGENT_FLEE_HEALTH_THRESHOLD || gameState.circleRadius <= AGENT_STOP_FLEE_CIRCLE_SIZE) && owner.currentWeapon.weaponType != WeaponType::none)
 		{
 			//switch to fighting state
 			setAgentState(owner, new AIStateFighting());
@@ -20,7 +20,8 @@ void AIStateWandering::execute(Agent& owner, const Game& gameState, float frameT
 		}
 		return;	//Switching state deletes the state object, so we want to wrap up here
 	}
-	//2. Are there any interesting items nearby?
+
+	//2. Loot if there any interesting items nearby
 	if (owner.visibleItems.size() > 0)
 	{
 		int priorityItemIndex = -1;
@@ -28,21 +29,20 @@ void AIStateWandering::execute(Agent& owner, const Game& gameState, float frameT
 		for (unsigned int i = 0; i < owner.visibleItems.size(); i++)
 		{
 			const ItemInstance& item = owner.visibleItems[i].get();
-			float distanceFactor = computeItemDistancePriority(owner, item);
+			float distanceFactor = computeItemDistancePriority(owner, gameState, item);
 			float typeFactor = 0.0f;
 			switch (item.baseItem.itemType)
 			{
-			case HEALTHPACK:
+			case ItemType::healthpack:
 				//the more injured we are, the more of a priority a healthpack is
 				typeFactor = computeHealthPriority(owner);
 				break;
-			case BODYARMOUR:
+			case ItemType::bodyArmour:
 				//The more armour we're missing, the more we value it.
 				typeFactor = computeArmourPriority(owner);
 				break;
 			default:
-				//TODO: gun priority decreases the more we value health or armour, and changes based on how well equipped we already are
-				typeFactor = 0.2f;
+				typeFactor = computeWeaponPriority(owner, item);
 				break;
 			}
 			float priority = distanceFactor + typeFactor;
@@ -55,17 +55,10 @@ void AIStateWandering::execute(Agent& owner, const Game& gameState, float frameT
 		if (priorityItemIndex != -1.0f)
 		{
 			//we found an item that's worth our time, go for it
-			owner.setTarget(owner.visibleItems[priorityItemIndex].get().position);
+			owner.setTarget(owner.visibleItems[priorityItemIndex].get().position, TargetType::item);
 		}
 	}
 
-	//3. If not, continue moving until we reach target, then pick a new target
-	if (owner.hasTarget)
-	{
-		checkAndMoveToTarget(owner, gameState, frameTime);
-	}
-	else
-	{
-		findTarget(owner, gameState);
-	}
+	//3. If we haven't started fighting, move to where we want to be
+	moveOrFindTarget(owner, gameState, frameTime);
 }

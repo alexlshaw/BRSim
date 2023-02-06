@@ -20,7 +20,7 @@ void AIStateFighting::execute(Agent& owner, const Game& gameState, float frameTi
 		Agent& other = owner.otherVisibleAgents[0];
 		if (owner.rotateTowards(other.position, frameTime))
 		{
-			if (glm::length(owner.position - other.position) < owner.range)
+			if (glm::length(owner.position - other.position) < owner.currentWeapon.range)
 			{
 				if (owner.shotCooldownRemainingTime <= 0.0f)
 				{

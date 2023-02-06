@@ -26,21 +26,21 @@ void AIStateFleeing::noNearbyEnemies(Agent& owner, const Game& gameState, float 
 		for (unsigned int i = 0; i < owner.visibleItems.size(); i++)
 		{
 			const ItemInstance& item = owner.visibleItems[i].get();
-			float distanceFactor = computeItemDistancePriority(owner, item);
+			float distanceFactor = computeItemDistancePriority(owner, gameState, item);
 			float typeFactor = 0.0f;
 			switch (item.baseItem.itemType)
 			{
-			case HEALTHPACK:
+			case ItemType::healthpack:
 				//the more injured we are, the more of a priority a healthpack is. Range 0...1
 				typeFactor = computeHealthPriority(owner);
 				break;
-			case BODYARMOUR:
+			case ItemType::bodyArmour:
 				//The more armour we're missing, the more we value it. But only at half the relative value of health. Range 0...0.5
 				typeFactor = computeArmourPriority(owner);
 				break;
 			default:
 				//any guns are low priority while we're fleeing
-				typeFactor = 0.1f;
+				typeFactor = 0.1f * computeWeaponPriority(owner, item);
 				break;
 			}
 			float priority = distanceFactor + typeFactor;
@@ -50,40 +50,31 @@ void AIStateFleeing::noNearbyEnemies(Agent& owner, const Game& gameState, float 
 				priorityItemIndex = i;
 			}
 		}
-		owner.setTarget(owner.visibleItems[priorityItemIndex].get().position);
+		owner.setTarget(owner.visibleItems[priorityItemIndex].get().position, TargetType::item);
 	}
-	//No enemies, do we have somewhere we want to be?
-	if (owner.hasTarget)
+	//No enemies or items, do we have somewhere we want to be?
+	if (owner.currentTargetType != TargetType::none)
 	{
 		checkAndMoveToTarget(owner, gameState, frameTime);
 	}
-	//Is there nowhere we want to be (possibly because we just arrived at target in the check/move call above)
-	if (!owner.hasTarget)
+	else
 	{
+		//we've reached wherever we wanted to flee to, resume wandering
 		setAgentState(owner, new AIStateWandering());
 	}
 }
 
 void AIStateFleeing::nearbyEnemies(Agent& owner, const Game& gameState, float frameTime)
 {
-	//Is the circle big enough to run away?
-	if (gameState.circleRadius > AGENT_STOP_FLEE_CIRCLE_SIZE)
+	//is the circle too small to run (and we are able to fight)?
+	if (gameState.circleRadius <= AGENT_STOP_FLEE_CIRCLE_SIZE && owner.currentWeapon.weaponType != WeaponType::none)
 	{
-		//Do we have somewhere to flee to?
-		if (owner.hasTarget)
-		{
-			checkAndMoveToTarget(owner, gameState, frameTime);
-		}
-		else
-		{
-			//TODO: Agents probably want to be smarter about where they run to than just picking a random spot
-			findTarget(owner, gameState);
-		}
+		//guess we'd better fight
+		setAgentState(owner, new AIStateFighting());
 	}
 	else
 	{
-		//guess we have to fight
-		setAgentState(owner, new AIStateFighting());
+		//keep running
+		moveOrFindTarget(owner, gameState, frameTime);
 	}
-	
 }

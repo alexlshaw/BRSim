@@ -2,7 +2,7 @@
 #include "Agent.h"
 
 Healthpack::Healthpack(std::string textureName)
-	:Item(textureName, HEALTHPACK) {}
+	:Item(textureName, ItemType::healthpack) {}
 
 void Healthpack::onPickup(Agent& agent)
 {

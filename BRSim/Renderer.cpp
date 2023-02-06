@@ -186,7 +186,7 @@ void Renderer::draw(const Game& gameState, const Level& level, const AgentManage
 	{
 		for (auto& agent : manager.agents)
 		{
-			if (agent.hasTarget)
+			if (agent.currentTargetType != TargetType::none)
 			{
 				drawLine(agent.position, agent.targetPosition, green);
 			}
@@ -246,7 +246,8 @@ void Renderer::drawAgents(const AgentManager& manager)
 				//draw targeting cicles
 				if (showRangeAndVision)
 				{
-					glm::mat4 sc = glm::scale(glm::vec3(agent.range, agent.range, agent.range));
+					float range = agent.currentWeapon.range;
+					glm::mat4 sc = glm::scale(glm::vec3(range, range, range));
 					modelview = tr * sc;
 					basic->setUniform(uBModelMatrix, modelview);
 					agentTargetingCircleMesh.draw(GL_LINE_LOOP);

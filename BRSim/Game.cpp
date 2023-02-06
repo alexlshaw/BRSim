@@ -9,8 +9,8 @@ Game::Game(Level& level)
 	circleCentre = glm::vec2(level.width / 2.0f, level.height / 2.0f);
 	circleRadius = (float)glm::max<int>(level.width, level.height) * 1.5f;
 	previousCircleRadius = circleRadius;
-	previousCircleCentre = circleCentre;
-	newCircle();
+previousCircleCentre = circleCentre;
+newCircle();
 }
 
 Game::~Game() {}
@@ -37,7 +37,7 @@ void Game::update(float deltaTime)
 
 void Game::newCircle()
 {
-	nextCircleRadius = circleRadius / 2.0f;
+	nextCircleRadius = glm::max<float>(circleRadius / 2.0f, 1.0f);
 	//generate locations for the new circle until we find one within the level bounds
 	bool validNewCircle = false;
 	while (!validNewCircle)
@@ -63,13 +63,36 @@ bool Game::isPositionInsideNextCircle(glm::vec2 position) const
 
 }
 
+bool Game::isPositionInsideCurrentCircle(glm::vec2 position) const
+{
+	float distanceToCentre = glm::length(position - circleCentre);
+	return distanceToCentre < circleRadius;
+
+}
+
 void Game::spawnItems()
 {
+	EquippedWeapon pistol(WeaponType::pistol, 20.0f, 1.0f, 60.0f, 100.0f);
+	EquippedWeapon assaultRifle(WeaponType::assaultRifle, 20, 0.35f, 60.0f, 100.0f);
+	EquippedWeapon sniperRifle(WeaponType::sniperRifle, 50.0f, 2.0f, 180.0f, 150.0f);
+
 	healthpackBase = std::make_unique<Healthpack>("Healthpack.png");
 	bodyArmourBase = std::make_unique<BodyArmour>("BodyArmour.png");
-	items.reserve(HEALTHPACK_COUNT + ARMOUR_COUNT);
-	//spawn the healthpacks
-	for (int i = 0; i < HEALTHPACK_COUNT; i++)
+	pistolBase = std::make_unique<Weapon>("Gun-Pistol.png", ItemType::gunPistol, pistol);
+	assaultRifleBase = std::make_unique<Weapon>("Gun-AssaultRifle.png", ItemType::gunAssaultRifle, assaultRifle);
+	sniperRifleBase = std::make_unique<Weapon>("Gun-SniperRifle.png", ItemType::gunSniperRifle, sniperRifle);
+
+	items.reserve(TOTAL_ITEM_SPAWNS);
+	spawnItemSet(*healthpackBase, items, HEALTHPACK_COUNT);
+	spawnItemSet(*bodyArmourBase, items, ARMOUR_COUNT);
+	spawnItemSet(*pistolBase, items, PISTOL_COUNT);
+	spawnItemSet(*assaultRifleBase, items, ASSAULT_RIFLE_COUNT);
+	spawnItemSet(*sniperRifleBase, items, SNIPER_RIFLE_COUNT);
+}
+
+void Game::spawnItemSet(Item& item, std::vector<ItemInstance>& items, int numberToSpawn)
+{
+	for (int i = 0; i < numberToSpawn; i++)
 	{
 		bool valid = false;
 		glm::vec2 pos;
@@ -80,22 +103,7 @@ void Game::spawnItems()
 			pos = glm::vec2(x, y);
 			valid = levelData.getLevelInfo(x, y).walkable;
 		}
-		ItemInstance newItem = ItemInstance(*healthpackBase, pos);
-		items.push_back(newItem);
-	}
-	//spawn the armours
-	for (int i = 0; i < ARMOUR_COUNT; i++)
-	{
-		bool valid = false;
-		glm::vec2 pos;
-		while (!valid)
-		{
-			float x = (float)(rand() % (int)levelData.width);
-			float y = (float)(rand() % (int)levelData.height);
-			pos = glm::vec2(x, y);
-			valid = levelData.getLevelInfo(x, y).walkable;
-		}
-		ItemInstance newItem = ItemInstance(*bodyArmourBase, pos);
+		ItemInstance newItem(item, pos);
 		items.push_back(newItem);
 	}
 }

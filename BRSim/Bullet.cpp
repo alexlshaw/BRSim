@@ -1,19 +1,22 @@
 #include "Bullet.h"
 
-Bullet::Bullet(glm::vec2 position, glm::vec2 direction, float lifespan, int owner)
+Bullet::Bullet(glm::vec2 position, glm::vec2 direction, int ownerID, float range, float damage, float speed)
 	:Entity(position),
 	direction(direction),
-	life(lifespan),
+	ownerID(ownerID),
+	maxRange(range),
+	damage(damage),
+	bulletSpeed(speed),
 	hitTarget(false),
-	ownerID(owner),
-	damage(BULLET_BASE_DAMAGE)
+	distanceTravelled(0.0f)
 {}
 
 void Bullet::update(float frameTime)
 {
-	life -= frameTime;
-	position += direction * frameTime * BULLET_SPEED;
-	if (hitTarget || life <= 0.0f)
+	float distanceThisFrame = frameTime * bulletSpeed;
+	position += direction * distanceThisFrame;
+	distanceTravelled += distanceThisFrame;
+	if (hitTarget || distanceTravelled >= maxRange)
 	{
 		enabled = false;
 	}
