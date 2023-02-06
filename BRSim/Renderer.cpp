@@ -41,14 +41,14 @@ void Renderer::initOpenGL()
 void Renderer::loadShaders()
 {
 	basic = std::make_unique<Shader>();
-	basic->compileShaderFromFile("./Data/Shaders/basic.vert", VERTEX);
-	basic->compileShaderFromFile("./Data/Shaders/basic.frag", FRAGMENT);
+	basic->compileShaderFromFile("./Data/Shaders/basic.vert", GLSLShaderType::vertex);
+	basic->compileShaderFromFile("./Data/Shaders/basic.frag", GLSLShaderType::fragment);
 	basic->linkAndValidate();
 	uBProjMatrix = basic->getUniformLocation("projectionViewMatrix");
 	uBModelMatrix = basic->getUniformLocation("modelMatrix");
 	texturedUnlit = std::make_unique<Shader>();
-	texturedUnlit->compileShaderFromFile("./Data/Shaders/TexturedUnlit.vert", VERTEX);
-	texturedUnlit->compileShaderFromFile("./Data/Shaders/TexturedUnlit.frag", FRAGMENT);
+	texturedUnlit->compileShaderFromFile("./Data/Shaders/TexturedUnlit.vert", GLSLShaderType::vertex);
+	texturedUnlit->compileShaderFromFile("./Data/Shaders/TexturedUnlit.frag", GLSLShaderType::fragment);
 	texturedUnlit->linkAndValidate();
 	uTProjMatrix = texturedUnlit->getUniformLocation("projectionViewMatrix");
 	uTModelMatrix = texturedUnlit->getUniformLocation("modelMatrix");
@@ -64,10 +64,10 @@ void Renderer::buildCircleMeshes()
 	{
 		float angle1 = glm::radians((360.0f / (float)sides) * (float)i);
 		float angle2 = glm::radians((360.0f / (float)sides) * (float)(i + 1));
-		glm::vec4 p1 = glm::vec4(glm::cos(angle1), glm::sin(angle1), 0.0f, 1.0f);
-		glm::vec4 p2 = glm::vec4(glm::cos(angle2), glm::sin(angle2), 0.0f, 1.0f);
-		glm::vec4 p3 = glm::vec4(p1.x * 50.0f, p1.y * 50.0f, 0.0f, 1.0f);
-		glm::vec4 p4 = glm::vec4(p2.x * 50.0f, p2.y * 50.0f, 0.0f, 1.0f);
+		glm::vec4 p1(glm::cos(angle1), glm::sin(angle1), 0.0f, 1.0f);
+		glm::vec4 p2(glm::cos(angle2), glm::sin(angle2), 0.0f, 1.0f);
+		glm::vec4 p3(p1.x * 50.0f, p1.y * 50.0f, 0.0f, 1.0f);
+		glm::vec4 p4(p2.x * 50.0f, p2.y * 50.0f, 0.0f, 1.0f);
 		vertices.push_back(Vertex(p1, translucentBlue));	//i * 4
 		vertices.push_back(Vertex(p2, translucentBlue));
 		vertices.push_back(Vertex(p3, translucentBlue));
@@ -83,13 +83,13 @@ void Renderer::buildCircleMeshes()
 	}
 	circleOfDeathMesh.Load(vertices, indices);
 
-	//now we build the nextCircle mesh (same as targeting circle but in blue, need to make this generic)
+	//now we build the nextCircle mesh (same as targeting circle but in blue, TODO: make this generic)
 	vertices.clear();
 	indices.clear();
 	for (int i = 0; i < sides; i++)
 	{
 		float angle = glm::radians((360.0f / (float)sides) * (float)i);
-		glm::vec4 p = glm::vec4(glm::cos(angle), glm::sin(angle), 0.0f, 1.0f);
+		glm::vec4 p(glm::cos(angle), glm::sin(angle), 0.0f, 1.0f);
 		vertices.push_back(Vertex(p, translucentBlue));
 		indices.push_back(i);
 	}
@@ -116,7 +116,7 @@ void Renderer::buildAgentMeshes()
 	for (int i = 0; i < sides; i++)
 	{
 		float angle = glm::radians((360.0f / (float)sides) * (float)i);
-		glm::vec4 p = glm::vec4(glm::cos(angle), glm::sin(angle), 0.0f, 1.0f);
+		glm::vec4 p(glm::cos(angle), glm::sin(angle), 0.0f, 1.0f);
 		vertices.push_back(Vertex(p, red));
 		indices.push_back(i);
 	}
@@ -310,11 +310,11 @@ void Renderer::drawLevel(const Level& level)
 	texturedUnlit->setUniform(uTModelMatrix, tr);
 	if (showLevelWalkData)
 	{
-		level.walkTex->use();
+		level.walkTex.use();
 	}
 	else
 	{
-		level.tex->use();
+		level.tex.use();
 	}
 	levelMesh.draw();
 }

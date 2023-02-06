@@ -114,16 +114,7 @@ void AgentManager::spawnAgents()
 	agents.reserve(agentsAlive);
 	for (int i = 0; i < agentsAlive; i++)
 	{
-		bool valid = false;
-		glm::vec2 pos = glm::vec2();
-		while (!valid)
-		{
-			float x = (float)(rand() % (int)levelData.width);
-			float y = (float)(rand() % (int)levelData.height);
-			pos = glm::vec2(x, y);
-			valid = levelData.getLevelInfo(x, y).walkable;
-		}
-		Agent a = Agent(pos, glm::radians((float)(rand() % 360)), i);
+		Agent a(levelData.randomWalkableLocation(), glm::radians((float)(rand() % 360)), i);
 		agents.push_back(a);
 	}
 }

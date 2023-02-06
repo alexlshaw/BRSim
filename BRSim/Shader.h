@@ -11,12 +11,12 @@ using glm::vec4;
 using glm::mat4;
 using glm::mat3;
 
-enum GLSLShaderType {
-	VERTEX,
-	FRAGMENT,
-	GEOMETRY,
-	TESS_CONTROL,
-	TESS_EVALUATION
+enum class GLSLShaderType {
+	vertex,
+	fragment,
+	geometry,
+	tesselationControl,
+	tesselationEvaluation
 };
 
 class Shader

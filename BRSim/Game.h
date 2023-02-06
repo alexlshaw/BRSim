@@ -32,7 +32,6 @@ private:
 	void spawnItemSet(Item& item, std::vector<ItemInstance>& items, int numberToSpawn);
 public:
 	Game(Level& level);
-	~Game();
 	void update(float deltaTime);
 	bool isPositionInsideNextCircle(glm::vec2 position) const;
 	bool isPositionInsideCurrentCircle(glm::vec2 position) const;

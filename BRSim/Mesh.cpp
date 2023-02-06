@@ -1,13 +1,12 @@
 #include "Mesh.h"
 
 Mesh::Mesh()
-{
-	vbo = -1;
-	ibo = -1;
-	vao = -1;
-	initialised = false;
-	indexCount = 0;
-}
+	:vbo(-1),
+	ibo(-1),
+	vao(-1),
+	initialised(false),
+	indexCount(0) {}
+
 
 void Mesh::Load(std::vector<Vertex> vertices, std::vector<unsigned int> indices)
 {
