@@ -1,17 +1,16 @@
 #include "Renderer.h"
 
 Renderer::Renderer(GLFWwindow* mainWindow, const Level& level)
+	:mainWindow(mainWindow),
+	showLevelWalkData(false),
+	showTargetingLines(false),
+	showHealthBars(true),
+	zoomLevel(1.0f),
+	windowOffset(glm::vec2(0.0f, 0.0f)),
+	windowOffsetAtPanStart(windowOffset)
 {
-	this->mainWindow = mainWindow;
-	showLevelWalkData = false;
-	showTargetingLines = false;
-	showHealthBars = true;
-	zoomLevel = 1.0f;
-	windowOffset = glm::vec2(0.0f, 0.0f);
-	windowOffsetAtPanStart = windowOffset;
 	initOpenGL();
 	loadShaders();
-	itemTex.loadFromPNG("Data/Textures/Healthpack.png");
 	buildCircleMeshes();
 	buildAgentMeshes();
 	buildLevelMesh(level);
@@ -42,14 +41,14 @@ void Renderer::initOpenGL()
 void Renderer::loadShaders()
 {
 	basic = std::make_unique<Shader>();
-	basic->compileShaderFromFile("./Data/Shaders/basic.vert", VERTEX);
-	basic->compileShaderFromFile("./Data/Shaders/basic.frag", FRAGMENT);
+	basic->compileShaderFromFile("./Data/Shaders/basic.vert", GLSLShaderType::vertex);
+	basic->compileShaderFromFile("./Data/Shaders/basic.frag", GLSLShaderType::fragment);
 	basic->linkAndValidate();
 	uBProjMatrix = basic->getUniformLocation("projectionViewMatrix");
 	uBModelMatrix = basic->getUniformLocation("modelMatrix");
 	texturedUnlit = std::make_unique<Shader>();
-	texturedUnlit->compileShaderFromFile("./Data/Shaders/TexturedUnlit.vert", VERTEX);
-	texturedUnlit->compileShaderFromFile("./Data/Shaders/TexturedUnlit.frag", FRAGMENT);
+	texturedUnlit->compileShaderFromFile("./Data/Shaders/TexturedUnlit.vert", GLSLShaderType::vertex);
+	texturedUnlit->compileShaderFromFile("./Data/Shaders/TexturedUnlit.frag", GLSLShaderType::fragment);
 	texturedUnlit->linkAndValidate();
 	uTProjMatrix = texturedUnlit->getUniformLocation("projectionViewMatrix");
 	uTModelMatrix = texturedUnlit->getUniformLocation("modelMatrix");
@@ -65,10 +64,10 @@ void Renderer::buildCircleMeshes()
 	{
 		float angle1 = glm::radians((360.0f / (float)sides) * (float)i);
 		float angle2 = glm::radians((360.0f / (float)sides) * (float)(i + 1));
-		glm::vec4 p1 = glm::vec4(glm::cos(angle1), glm::sin(angle1), 0.0f, 1.0f);
-		glm::vec4 p2 = glm::vec4(glm::cos(angle2), glm::sin(angle2), 0.0f, 1.0f);
-		glm::vec4 p3 = glm::vec4(p1.x * 50.0f, p1.y * 50.0f, 0.0f, 1.0f);
-		glm::vec4 p4 = glm::vec4(p2.x * 50.0f, p2.y * 50.0f, 0.0f, 1.0f);
+		glm::vec4 p1(glm::cos(angle1), glm::sin(angle1), 0.0f, 1.0f);
+		glm::vec4 p2(glm::cos(angle2), glm::sin(angle2), 0.0f, 1.0f);
+		glm::vec4 p3(p1.x * 50.0f, p1.y * 50.0f, 0.0f, 1.0f);
+		glm::vec4 p4(p2.x * 50.0f, p2.y * 50.0f, 0.0f, 1.0f);
 		vertices.push_back(Vertex(p1, translucentBlue));	//i * 4
 		vertices.push_back(Vertex(p2, translucentBlue));
 		vertices.push_back(Vertex(p3, translucentBlue));
@@ -84,13 +83,13 @@ void Renderer::buildCircleMeshes()
 	}
 	circleOfDeathMesh.Load(vertices, indices);
 
-	//now we build the nextCircle mesh (same as targeting circle but in blue, need to make this generic)
+	//now we build the nextCircle mesh (same as targeting circle but in blue, TODO: make this generic)
 	vertices.clear();
 	indices.clear();
 	for (int i = 0; i < sides; i++)
 	{
 		float angle = glm::radians((360.0f / (float)sides) * (float)i);
-		glm::vec4 p = glm::vec4(glm::cos(angle), glm::sin(angle), 0.0f, 1.0f);
+		glm::vec4 p(glm::cos(angle), glm::sin(angle), 0.0f, 1.0f);
 		vertices.push_back(Vertex(p, translucentBlue));
 		indices.push_back(i);
 	}
@@ -117,7 +116,7 @@ void Renderer::buildAgentMeshes()
 	for (int i = 0; i < sides; i++)
 	{
 		float angle = glm::radians((360.0f / (float)sides) * (float)i);
-		glm::vec4 p = glm::vec4(glm::cos(angle), glm::sin(angle), 0.0f, 1.0f);
+		glm::vec4 p(glm::cos(angle), glm::sin(angle), 0.0f, 1.0f);
 		vertices.push_back(Vertex(p, red));
 		indices.push_back(i);
 	}
@@ -134,6 +133,12 @@ void Renderer::buildAgentMeshes()
 		vertex.color = green;
 	}
 	agentHealthFrontMesh.Load(vertices, indices);
+	//recolour to grey for the armour
+	for (auto& vertex : vertices)
+	{
+		vertex.color = midGrey;
+	}
+	agentArmourMesh.Load(vertices, indices);
 }
 
 void Renderer::buildLevelMesh(const Level& level)
@@ -173,7 +178,7 @@ void Renderer::draw(const Game& gameState, const Level& level, const AgentManage
 	//draw bullets
 	for (auto& bullet : manager.bullets)
 	{
-		drawLine(bullet.pos, bullet.pos + (bullet.dir * 2.0f), black);
+		drawLine(bullet.position, bullet.position + (bullet.direction * 2.0f), black);
 	}
 
 	//draw target lines
@@ -181,9 +186,9 @@ void Renderer::draw(const Game& gameState, const Level& level, const AgentManage
 	{
 		for (auto& agent : manager.agents)
 		{
-			if (agent.hasTarget)
+			if (agent.currentTargetType != TargetType::none)
 			{
-				drawLine(agent.pos, agent.targetPosition, green);
+				drawLine(agent.position, agent.targetPosition, green);
 			}
 		}
 	}
@@ -228,36 +233,55 @@ void Renderer::drawAgents(const AgentManager& manager)
 {
 	for (auto& agent : manager.agents)
 	{
-		glm::mat4 tr = glm::translate(glm::vec3(agent.pos.x, agent.pos.y, 0.0f));
-		glm::mat4 rot = glm::rotate(agent.look, glm::vec3(0.0f, 0.0f, 1.0f));
-		glm::mat4 modelview = tr * rot;
-		basic->setUniform(uBModelMatrix, modelview);
-		if (agent.alive)
+		if (agent.enabled)
 		{
-			agentMesh.draw();
-
-			//draw targeting cicle
-			glm::mat4 sc = glm::scale(glm::vec3(agent.range, agent.range, agent.range));
-			modelview = tr * sc;
+			glm::mat4 tr = glm::translate(glm::vec3(agent.position.x, agent.position.y, 0.0f));
+			glm::mat4 rot = glm::rotate(agent.look, glm::vec3(0.0f, 0.0f, 1.0f));
+			glm::mat4 modelview = tr * rot;
 			basic->setUniform(uBModelMatrix, modelview);
-			agentTargetingCircleMesh.draw(GL_LINE_LOOP);
-
-			if (showHealthBars)
+			if (agent.alive)
 			{
-				//draw health bar
-				tr = glm::translate(glm::vec3(agent.pos.x, agent.pos.y - 10.0f, 0.0f));
-				modelview = tr;
-				basic->setUniform(uBModelMatrix, modelview);
-				agentHealthBackMesh.draw();
-				sc = glm::scale(glm::vec3((float)agent.currentHealth / (float)AGENT_MAX_HEALTH, 1.0f, 1.0f));
-				modelview = tr * sc;
-				basic->setUniform(uBModelMatrix, modelview);
-				agentHealthFrontMesh.draw();
+				agentMesh.draw();
+
+				//draw targeting cicles
+				if (showRangeAndVision)
+				{
+					float range = agent.currentWeapon.range;
+					glm::mat4 sc = glm::scale(glm::vec3(range, range, range));
+					modelview = tr * sc;
+					basic->setUniform(uBModelMatrix, modelview);
+					agentTargetingCircleMesh.draw(GL_LINE_LOOP);
+					sc = glm::scale(glm::vec3(AGENT_VISIBILITY_RANGE, AGENT_VISIBILITY_RANGE, AGENT_VISIBILITY_RANGE));
+					modelview = tr * sc;
+					basic->setUniform(uBModelMatrix, modelview);
+					agentTargetingCircleMesh.draw(GL_LINE_LOOP);
+				}
+				//draw health bars
+				if (showHealthBars)
+				{
+					tr = glm::translate(glm::vec3(agent.position.x, agent.position.y - 10.0f, 0.0f));
+					modelview = tr;
+					basic->setUniform(uBModelMatrix, modelview);
+					agentHealthBackMesh.draw();
+					glm::mat4 sc = glm::scale(glm::vec3((float)agent.currentHealth / (float)AGENT_MAX_HEALTH, 1.0f, 1.0f));
+					modelview = tr * sc;
+					basic->setUniform(uBModelMatrix, modelview);
+					agentHealthFrontMesh.draw();
+					//now the shield, slightly below
+					if (agent.currentArmour > 0)
+					{
+						tr = glm::translate(glm::vec3(agent.position.x, agent.position.y - 12.0f, 0.0f));
+						sc = glm::scale(glm::vec3((float)agent.currentArmour / (float)AGENT_MAX_ARMOUR, 1.0f, 1.0f));
+						modelview = tr * sc;
+						basic->setUniform(uBModelMatrix, modelview);
+						agentArmourMesh.draw();
+					}
+				}
 			}
-		}
-		else
-		{
-			agentMesh.draw(GL_LINE_LOOP);
+			else
+			{
+				agentMesh.draw(GL_LINE_LOOP);
+			}
 		}
 	}
 }
@@ -286,23 +310,23 @@ void Renderer::drawLevel(const Level& level)
 	texturedUnlit->setUniform(uTModelMatrix, tr);
 	if (showLevelWalkData)
 	{
-		level.walkTex->use();
+		level.walkTex.use();
 	}
 	else
 	{
-		level.tex->use();
+		level.tex.use();
 	}
 	levelMesh.draw();
 }
 
 void Renderer::drawItems(const Game& gameState)
 {
-	itemTex.use();
 	for (auto& item : gameState.items)
 	{
-		if (item.available)
+		if (item.enabled)
 		{
-			glm::mat4 tr = glm::translate(glm::vec3(item.location.x, item.location.y, 0.0f));	//no need for rot/scale
+			item.baseItem.pickupTexture.use();
+			glm::mat4 tr = glm::translate(glm::vec3(item.position.x, item.position.y, 0.0f));	//no need for rot/scale
 			texturedUnlit->setUniform(uTModelMatrix, tr);
 			itemMesh.draw();
 		}
@@ -338,4 +362,9 @@ void Renderer::toggleShowLevelWalkData()
 void Renderer::toggleShowHealthBars()
 {
 	showHealthBars = !showHealthBars;
+}
+
+void Renderer::toggleShowRangeAndVision()
+{
+	showRangeAndVision = !showRangeAndVision;
 }

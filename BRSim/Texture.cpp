@@ -1,9 +1,7 @@
 #include "Texture.h"
 
-Texture::Texture() 
-{
-	textureIndex = -1;
-}
+Texture::Texture()
+	:textureIndex(-1) {}
 
 Texture::Texture(const char* fileName)
 {
@@ -15,7 +13,7 @@ Texture::~Texture()
 	glDeleteTextures(1, &textureIndex);
 }
 
-void Texture::use()
+void Texture::use() const
 {
 	glBindTexture(GL_TEXTURE_2D, textureIndex);
 }

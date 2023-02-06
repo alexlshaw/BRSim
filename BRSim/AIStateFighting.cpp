@@ -18,11 +18,18 @@ void AIStateFighting::execute(Agent& owner, const Game& gameState, float frameTi
 	if (owner.currentHealth > AGENT_FLEE_HEALTH_THRESHOLD || gameState.circleRadius <= AGENT_STOP_FLEE_CIRCLE_SIZE)
 	{
 		Agent& other = owner.otherVisibleAgents[0];
-		if (owner.rotateTowards(other.pos, frameTime))
+		if (owner.rotateTowards(other.position, frameTime))
 		{
-			if (owner.shotCooldownRemainingTime <= 0.0f)
+			if (glm::length(owner.position - other.position) < owner.currentWeapon.range)
 			{
-				owner.firing = true;
+				if (owner.shotCooldownRemainingTime <= 0.0f)
+				{
+					owner.firing = true;
+				}
+			}
+			else
+			{
+				owner.moveTowards(other.position, frameTime);
 			}
 		}
 	}

@@ -12,7 +12,6 @@
 #include "Game.h"
 #include "Level.h"
 #include "Renderer.h"
-#include "Settings.h"
 
 #include "glad/glad.h"
 #include "GLFW/glfw3.h"
@@ -49,6 +48,10 @@ void key_callback(GLFWwindow* window, int key, int scancode, int action, int mod
 	{
 		renderer->toggleShowTargetingLines();
 	}
+	if (key == GLFW_KEY_V && action == GLFW_PRESS)
+	{
+		renderer->toggleShowRangeAndVision();
+	}
 	if (key == GLFW_KEY_W && action == GLFW_PRESS)
 	{
 		renderer->toggleShowLevelWalkData();
@@ -61,13 +64,29 @@ void key_callback(GLFWwindow* window, int key, int scancode, int action, int mod
 	{
 		//reduce timestep
 		timeRate -= 1.0f;
-		printf("Decreasing time scale to %i\n", (int)timeRate);
+		if (timeRate == 0.0f)	//we just decreased from 1, we actually want to go to 0.5 here
+		{
+			timeRate = 0.5f;
+		}
+		else if (timeRate < 0.0f)	//we've just tried to go down from 0.5, or we were already paused
+		{
+			timeRate = 0.0f;
+		}
+		printf("Decreasing time scale to %.1f\n", timeRate);
 	}
 	if (key == GLFW_KEY_P && action == GLFW_PRESS)
 	{
 		//increase timestep
 		timeRate += 1.0f;
-		printf("Increasing time scale to %i\n", (int)timeRate);
+		if (timeRate == 1.0f) // we were paused, we actually want to go to 0.5 here
+		{
+			timeRate = 0.5f;
+		}
+		else if (timeRate == 1.5f)	//we were on 0.5, we actually want to go to 1 here
+		{
+			timeRate = 1.0f;
+		}
+		printf("Increasing time scale to %.1f\n", timeRate);
 	}
 }
 
@@ -77,7 +96,8 @@ void mouse_button_callback(GLFWwindow* window, int button, int action, int mods)
 	glfwGetCursorPos(window, &xpos, &ypos);
 	if (button == GLFW_MOUSE_BUTTON_RIGHT && action == GLFW_PRESS)
 	{
-		mouseClickStartLoc = glm::vec2(xpos, ypos);
+		mouseClickStartLoc.x = (float)xpos;
+		mouseClickStartLoc.y = (float)ypos;
 		renderer->windowOffsetAtPanStart = renderer->windowOffset;
 		panning = true;
 	}
@@ -141,7 +161,7 @@ void update(float frameTime)
 	{
 		double xpos, ypos;
 		glfwGetCursorPos(mainWindow, &xpos, &ypos);
-		glm::vec2 mouseEndLoc = glm::vec2(xpos, ypos);
+		glm::vec2 mouseEndLoc(xpos, ypos);
 		glm::vec2 delta = (mouseEndLoc - mouseClickStartLoc) / renderer->zoomLevel;
 		renderer->windowOffset = renderer->windowOffsetAtPanStart + glm::vec2(-delta.x, delta.y);
 	}

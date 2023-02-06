@@ -8,7 +8,15 @@ using std::ifstream;
 using std::ios;
 using std::ostringstream;
 
-Shader::Shader() : vs(0), fs(0), gs(0), tcs(0), tes(0), handle(0), linked(false), validated(false) { }
+Shader::Shader() 
+	:vs(0),
+	fs(0),
+	gs(0),
+	tcs(0),
+	tes(0),
+	handle(0),
+	linked(false),
+	validated(false) { }
 
 Shader::~Shader()
 {
@@ -81,23 +89,23 @@ bool Shader::compileShaderFromString(const string& source, GLSLShaderType type)
 	GLuint shaderHandle = 0;
 	switch (type)
 	{
-	case VERTEX:
+	case GLSLShaderType::vertex:
 		shaderHandle = glCreateShader(GL_VERTEX_SHADER);
 		vs = shaderHandle;
 		break;
-	case FRAGMENT:
+	case GLSLShaderType::fragment:
 		shaderHandle = glCreateShader(GL_FRAGMENT_SHADER);
 		fs = shaderHandle;
 		break;
-	case GEOMETRY:
+	case GLSLShaderType::geometry:
 		shaderHandle = glCreateShader(GL_GEOMETRY_SHADER);
 		gs = shaderHandle;
 		break;
-	case TESS_CONTROL:
+	case GLSLShaderType::tesselationControl:
 		shaderHandle = glCreateShader(GL_TESS_CONTROL_SHADER);
 		tcs = shaderHandle;
 		break;
-	case TESS_EVALUATION:
+	case GLSLShaderType::tesselationEvaluation:
 		shaderHandle = glCreateShader(GL_TESS_EVALUATION_SHADER);
 		tes = shaderHandle;
 		break;

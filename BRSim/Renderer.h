@@ -23,6 +23,7 @@ const glm::vec4 black = glm::vec4(0.0f, 0.0f, 0.0f, 1.0f);
 const glm::vec4 red = glm::vec4(1.0f, 0.0f, 0.0f, 1.0f);
 const glm::vec4 translucentBlue = glm::vec4(0.0f, 0.0f, 1.0f, 0.35f);
 const glm::vec4 green = glm::vec4(0.0f, 1.0f, 0.0f, 1.0f);
+const glm::vec4 midGrey = glm::vec4(0.5f, 0.5f, 0.5f, 1.0f);
 
 class Renderer
 {
@@ -35,16 +36,16 @@ private:
 	int uBProjMatrix, uBModelMatrix, uTProjMatrix, uTModelMatrix, uTex;
 
 	Mesh circleOfDeathMesh, nextCircleMesh;
-	Mesh agentMesh, agentTargetingCircleMesh, agentHealthBackMesh, agentHealthFrontMesh;
+	Mesh agentMesh, agentTargetingCircleMesh, agentHealthBackMesh, agentHealthFrontMesh, agentArmourMesh;
 	Mesh lineMesh;
 	Mesh levelMesh;
 	Mesh itemMesh;
-	Texture itemTex;
 	std::vector<Vertex> linePoints;
 	
 	bool showTargetingLines;
 	bool showLevelWalkData;
 	bool showHealthBars;
+	bool showRangeAndVision;
 
 	void initOpenGL();
 	void loadShaders();
@@ -70,4 +71,5 @@ public:
 	void toggleShowTargetingLines();
 	void toggleShowLevelWalkData();
 	void toggleShowHealthBars();
+	void toggleShowRangeAndVision();
 };

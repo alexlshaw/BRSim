@@ -8,7 +8,7 @@ void AIStateWandering::execute(Agent& owner, const Game& gameState, float frameT
 	//1. Switch to fighting if enemies nearby
 	if (!owner.otherVisibleAgents.empty())
 	{
-		if (owner.currentHealth > AGENT_FLEE_HEALTH_THRESHOLD || gameState.circleRadius <= AGENT_STOP_FLEE_CIRCLE_SIZE)
+		if ((owner.currentHealth > AGENT_FLEE_HEALTH_THRESHOLD || gameState.circleRadius <= AGENT_STOP_FLEE_CIRCLE_SIZE) && owner.currentWeapon.weaponType != WeaponType::none)
 		{
 			//switch to fighting state
 			setAgentState(owner, new AIStateFighting());
@@ -20,23 +20,45 @@ void AIStateWandering::execute(Agent& owner, const Game& gameState, float frameT
 		}
 		return;	//Switching state deletes the state object, so we want to wrap up here
 	}
-	//2. Are we injured and able to see a health pack?
-	if (owner.currentHealth < AGENT_MAX_HEALTH)
+
+	//2. Loot if there any interesting items nearby
+	if (owner.visibleItems.size() > 0)
 	{
-		//can we see a health pack?
-		if (owner.visibleItems.size() > 0)
+		int priorityItemIndex = -1;
+		float itemPriority = -1.0f;
+		for (unsigned int i = 0; i < owner.visibleItems.size(); i++)
 		{
-			owner.setTarget(owner.visibleItems[0].get().location);
+			const ItemInstance& item = owner.visibleItems[i].get();
+			float distanceFactor = computeItemDistancePriority(owner, gameState, item);
+			float typeFactor = 0.0f;
+			switch (item.baseItem.itemType)
+			{
+			case ItemType::healthpack:
+				//the more injured we are, the more of a priority a healthpack is
+				typeFactor = computeHealthPriority(owner);
+				break;
+			case ItemType::bodyArmour:
+				//The more armour we're missing, the more we value it.
+				typeFactor = computeArmourPriority(owner);
+				break;
+			default:
+				typeFactor = computeWeaponPriority(owner, item);
+				break;
+			}
+			float priority = distanceFactor + typeFactor;
+			if (typeFactor > 0.1f && priority > itemPriority)	//Only grab the item if something we care about
+			{
+				itemPriority = priority;
+				priorityItemIndex = i;
+			}
+		}
+		if (priorityItemIndex != -1.0f)
+		{
+			//we found an item that's worth our time, go for it
+			owner.setTarget(owner.visibleItems[priorityItemIndex].get().position, TargetType::item);
 		}
 	}
 
-	//3. If not, continue moving until we reach target, then pick a new target
-	if (owner.hasTarget)
-	{
-		checkAndMoveToTarget(owner, gameState, frameTime);
-	}
-	else
-	{
-		findTarget(owner, gameState);
-	}
+	//3. If we haven't started fighting, move to where we want to be
+	moveOrFindTarget(owner, gameState, frameTime);
 }

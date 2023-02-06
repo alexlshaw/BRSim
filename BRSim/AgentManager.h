@@ -8,6 +8,9 @@
 #include "Level.h"
 #include "glm/glm.hpp"
 
+const int MAX_AGENTS = 20;	//default 20
+const float AGENT_COLLISION_RADIUS = 1.0f;
+
 class AgentManager
 {
 public:
@@ -23,10 +26,12 @@ public:
 	void spawnAgents();
 private:
 	void hurtAgentsOutsideCircle(const Game& gameState);
+	void hitAgentWithBullet(Agent& agent, Bullet& bullet);
 	void killAgent(Agent& agent);
 	void updateAgentSightOfOtherAgents(Agent& agent);
 	void updateAgentSightOfItems(Agent& agent, const Game& gameState);
 	void checkPickups(Agent& agent, Game& gameState);
+	void fireBullet(Agent& shooter);
 	Level& levelData;
 	float elapsedDamageTickTime;
 };

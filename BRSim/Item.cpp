@@ -1,14 +1,10 @@
 #include "Item.h"
 #include "Agent.h"
 
-Item::Item(glm::vec2 location)
-	:location(location)
+Item::Item(std::string textureName, ItemType itemType)
+	:itemType(itemType)
 {
-	available = true;
-}
-
-void Item::onPickup(Agent& agent)
-{
-	agent.currentHealth = glm::min<int>(agent.currentHealth + 80, 100);
-	available = false;
+	char fileName[128];
+	sprintf_s(fileName, "Data/Textures/%s", textureName.c_str());
+	pickupTexture.loadFromPNG(fileName);
 }

@@ -16,5 +16,5 @@ public:
 	~Texture();
 	void loadFromPixels(std::vector<GLubyte> pixels, int width, int height);	//4 elements in array define a pixel in rgba format
 	void loadFromPNG(const char* fileName);
-	void use();
+	void use() const;
 };

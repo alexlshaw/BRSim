@@ -1,18 +1,19 @@
 #pragma once
 
 #include "glm/glm.hpp"
+#include "Entity.h"
 
-const int BULLET_BASE_DAMAGE = 20;
-
-class Bullet
+class Bullet : public Entity
 {
+private:
+	float distanceTravelled;
+	float maxRange;
 public:
-	Bullet(glm::vec2 position, glm::vec2 direction, float lifespan, int owner);
-	glm::vec2 pos;
-	glm::vec2 dir;
-	float life;
+	float bulletSpeed;
+	glm::vec2 direction;
 	bool hitTarget;
 	int ownerID;
-	int damage;
-private:
+	float damage;
+	Bullet(glm::vec2 position, glm::vec2 direction, int ownerID, float range, float damage, float speed);
+	void update(float frameTime);
 };

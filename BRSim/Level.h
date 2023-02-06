@@ -3,8 +3,9 @@
 #include <string>
 
 #include "glm\glm.hpp"
-#include "Settings.h"
 #include "Texture.h"
+
+const bool LOAD_LEVEL_SURFACE_DATA = true;
 
 class LevelData
 {
@@ -17,13 +18,13 @@ class Level
 public:
 	Level();
 	Level(int width, int height, std::string levelName);
-	~Level();
 	int width, height;
 	std::string name;
-	LevelData getLevelInfo(float x, float y);
-	Texture* tex;
-	Texture* walkTex;
-	bool locationInBounds(glm::vec2 location);
+	Texture tex;
+	Texture walkTex;
+	LevelData getLevelInfo(glm::vec2 location) const;
+	bool locationInBounds(glm::vec2 location) const;
+	glm::vec2 randomWalkableLocation() const;
 private:
 	std::vector<unsigned char> levelData;
 	void loadLevelImages();
