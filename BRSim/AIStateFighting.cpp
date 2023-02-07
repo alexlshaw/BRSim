@@ -13,9 +13,9 @@ void AIStateFighting::execute(Agent& owner, const Game& gameState, float frameTi
 		setAgentState(owner, new AIStateWandering());
 		return;	//Switching state deletes the state object, so we want to wrap up here
 	}
-
+	
 	//2. We have 1+ opponents, do we want this fight?
-	if (owner.currentHealth > AGENT_FLEE_HEALTH_THRESHOLD || gameState.circleRadius <= AGENT_STOP_FLEE_CIRCLE_SIZE)
+	if (owner.currentHealth > owner.aiWeights.fleeHealthThreshold || gameState.circleRadius <= owner.aiWeights.stopFleeingCircleThreshold)
 	{
 		Agent& other = owner.otherVisibleAgents[0];
 		if (owner.rotateTowards(other.position, frameTime))

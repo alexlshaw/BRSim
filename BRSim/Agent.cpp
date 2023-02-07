@@ -11,7 +11,8 @@ Agent::Agent(glm::vec2 position, float direction, int identity)
 	shotCooldownRemainingTime(0.0f),
 	currentHealth(AGENT_MAX_HEALTH),
 	currentArmour(0),
-	currentState(static_cast<AIState*>(new AIStateWandering()))
+	currentState(static_cast<AIState*>(new AIStateWandering())),
+	aiWeights(AIWeights())
 {
 	//TODO: This currently leaks memory -> AI state on game end not deleted. Currently a non-issue in that game end also means process end, but should fix
 }

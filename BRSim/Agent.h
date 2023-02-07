@@ -4,6 +4,7 @@
 #include "glm/glm.hpp"
 #include "AIState.h"
 #include "AIStateWandering.h"
+#include "AIWeights.h"
 #include "Entity.h"
 #include "EquippedWeapon.h"
 #include "Game.h"
@@ -11,8 +12,6 @@
 
 const float AGENT_MAX_HEALTH = 100.0f;
 const float AGENT_MAX_ARMOUR = 100.0f;
-const float AGENT_FLEE_HEALTH_THRESHOLD = 50.0f;	//Agent will try to avoid fights while their health is below this amount
-const float AGENT_STOP_FLEE_CIRCLE_SIZE = 360.0f;	//Once the circle gets this small, agents will stop trying to run away from each other and just fight
 const float AGENT_MAX_ROTATE_SPEED = 90.0f;
 const float AGENT_MAX_SPEED = 20.0f;
 const float AGENT_VISIBILITY_RANGE = 100.0f;
@@ -48,4 +47,5 @@ public:
 	std::vector<std::reference_wrapper<const ItemInstance>> visibleItems;
 	EquippedWeapon currentWeapon;
 	bool activeAndAlive();
+	AIWeights aiWeights;
 };

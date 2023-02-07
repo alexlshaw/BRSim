@@ -40,17 +40,21 @@ void AIStateFleeing::noNearbyEnemies(Agent& owner, const Game& gameState, float 
 				break;
 			default:
 				//any guns are low priority while we're fleeing
-				typeFactor = 0.1f * computeWeaponPriority(owner, item);
+				typeFactor = computeWeaponPriority(owner, item) * owner.aiWeights.weaponPickupWhileFleeingPriority;
 				break;
 			}
 			float priority = distanceFactor + typeFactor;
-			if (priority > itemPriority)
+			//if this item is better than others we've looked at (and also worth our time)
+			if (priority > itemPriority && priority > owner.aiWeights.ignoreItemThreshold)
 			{
 				itemPriority = priority;
 				priorityItemIndex = i;
 			}
 		}
-		owner.setTarget(owner.visibleItems[priorityItemIndex].get().position, TargetType::item);
+		if (priorityItemIndex != -1)
+		{
+			owner.setTarget(owner.visibleItems[priorityItemIndex].get().position, TargetType::item);
+		}
 	}
 	//No enemies or items, do we have somewhere we want to be?
 	if (owner.currentTargetType != TargetType::none)
@@ -67,7 +71,7 @@ void AIStateFleeing::noNearbyEnemies(Agent& owner, const Game& gameState, float 
 void AIStateFleeing::nearbyEnemies(Agent& owner, const Game& gameState, float frameTime)
 {
 	//is the circle too small to run (and we are able to fight)?
-	if (gameState.circleRadius <= AGENT_STOP_FLEE_CIRCLE_SIZE && owner.currentWeapon.weaponType != WeaponType::none)
+	if (gameState.circleRadius <= owner.aiWeights.stopFleeingCircleThreshold && owner.currentWeapon.weaponType != WeaponType::none)
 	{
 		//guess we'd better fight
 		setAgentState(owner, new AIStateFighting());

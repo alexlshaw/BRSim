@@ -2,11 +2,11 @@
 
 enum class WeaponType
 {
-	none,
-	pistol,
-	assaultRifle,
-	sniperRifle
-};
+	none = 0,
+	pistol = 1,
+	assaultRifle = 2,
+	sniperRifle = 3
+};	//IMPORTANT: The values in this enum are used as indices for arrays in the AIWeights class
 
 //This is the class that represents a weapon the agent currently is using
 //For the item pickup that spawns in the level (and sets this), see the class Weapon

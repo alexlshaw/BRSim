@@ -71,6 +71,9 @@
     <ClCompile Include="EquippedWeapon.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="AIWeights.cpp">
+      <Filter>Source Files\AI</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="AgentManager.h">
@@ -141,6 +144,9 @@
     </ClInclude>
     <ClInclude Include="EquippedWeapon.h">
       <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="AIWeights.h">
+      <Filter>Header Files\AI</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
