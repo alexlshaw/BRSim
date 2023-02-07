@@ -12,6 +12,7 @@ Agent::Agent(glm::vec2 position, float direction, int identity)
 	currentHealth(AGENT_MAX_HEALTH),
 	currentArmour(0),
 	currentState(static_cast<AIState*>(new AIStateWandering())),
+	currentWeapon(EquippedWeapon()),
 	aiWeights(AIWeights())
 {
 	//TODO: This currently leaks memory -> AI state on game end not deleted. Currently a non-issue in that game end also means process end, but should fix
@@ -84,7 +85,22 @@ void Agent::update(float frameTime, const Game& gameState)
 	currentState->execute(*this, gameState, frameTime);
 }
 
-bool Agent::activeAndAlive()
+bool Agent::activeAndAlive() const
 {
 	return enabled && alive;
+}
+
+void Agent::reset()
+{
+	enabled = true;
+	alive = true;
+	firing = false;
+	currentArmour = 0;
+	currentHealth = AGENT_MAX_HEALTH;
+	shotCooldownRemainingTime = 0.0f;
+	currentTargetType = TargetType::none;
+	currentWeapon = EquippedWeapon();
+	look = glm::radians((float)(rand() % 360));
+	delete currentState;
+	currentState = new AIStateWandering();
 }

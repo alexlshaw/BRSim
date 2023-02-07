@@ -207,3 +207,15 @@ void AgentManager::updateAgentSightOfItems(Agent& agent, const Game& gameState)
 		}
 	}
 }
+
+void AgentManager::restart()
+{
+	elapsedDamageTickTime = 0.0f;
+	agentsAlive = MAX_AGENTS;
+	for (auto& agent : agents)
+	{
+		agent.reset();
+		agent.position = levelData.randomWalkableLocation();
+	}
+	bullets.clear();
+}

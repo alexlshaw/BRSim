@@ -24,6 +24,7 @@ public:
 	std::vector<Bullet> bullets;
 	float checkCollision(Bullet& bullet, Agent& agent, float frameTime);
 	void spawnAgents();
+	void restart();
 private:
 	void hurtAgentsOutsideCircle(const Game& gameState);
 	void hitAgentWithBullet(Agent& agent, Bullet& bullet);

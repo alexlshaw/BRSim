@@ -29,15 +29,17 @@ private:
 	void newCircle();
 	int circleNumber;
 	void spawnItems();
+	void initialiseItems();
 	void spawnItemSet(Item& item, std::vector<ItemInstance>& items, int numberToSpawn);
 public:
 	Game(Level& level);
 	void update(float deltaTime);
 	bool isPositionInsideNextCircle(glm::vec2 position) const;
 	bool isPositionInsideCurrentCircle(glm::vec2 position) const;
+	void restart();
 	glm::vec2 circleCentre, nextCircleCentre, previousCircleCentre;
 	float circleRadius, previousCircleRadius, nextCircleRadius;
-	float elapsedShrinkTime = 0.0f;
+	float elapsedShrinkTime;
 	Level& levelData;
 	float circleDamageTick;
 	std::vector<ItemInstance> items;

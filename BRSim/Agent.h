@@ -46,6 +46,7 @@ public:
 	std::vector<std::reference_wrapper<Agent>> otherVisibleAgents;
 	std::vector<std::reference_wrapper<const ItemInstance>> visibleItems;
 	EquippedWeapon currentWeapon;
-	bool activeAndAlive();
+	bool activeAndAlive() const;
+	void reset();
 	AIWeights aiWeights;
 };
