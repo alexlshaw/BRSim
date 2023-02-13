@@ -46,6 +46,7 @@ private:
 	bool showLevelWalkData;
 	bool showHealthBars;
 	bool showRangeAndVision;
+	
 
 	void initOpenGL();
 	void loadShaders();
@@ -64,7 +65,6 @@ public:
 	glm::vec2 windowOffset;
 	glm::vec2 windowOffsetAtPanStart;
 	float zoomLevel;
-	
 	Renderer(GLFWwindow* mainWindow, const Level& level);
 	~Renderer();
 	void draw(const Game& gameState, const Level& level, const AgentManager& manager);
@@ -72,4 +72,5 @@ public:
 	void toggleShowLevelWalkData();
 	void toggleShowHealthBars();
 	void toggleShowRangeAndVision();
+	void adjustZoomLevel(int steps);	//zoom in or out by "steps" steps
 };

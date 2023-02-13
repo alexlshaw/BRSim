@@ -119,15 +119,7 @@ void mouse_button_callback(GLFWwindow* window, int button, int action, int mods)
 void scroll_callback(GLFWwindow* window, double xoffset, double yoffset)
 {
 	//mousewheel only gives y offsets (integral values, 1 per mouse-wheel-click per frame it seems, up is +ve, down -ve)
-	if (yoffset > 0.0f)
-	{
-		renderer->zoomLevel *= 2.0f;
-	}
-	else if (yoffset < 0.0f)
-	{
-		renderer->zoomLevel *= 0.5f;
-	}
-	printf("Zooming to: %.2f\n", renderer->zoomLevel);
+	renderer->adjustZoomLevel((int)yoffset);
 }
 
 int init_GLFW()

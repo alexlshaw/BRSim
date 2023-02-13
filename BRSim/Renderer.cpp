@@ -5,7 +5,7 @@ Renderer::Renderer(GLFWwindow* mainWindow, const Level& level)
 	showLevelWalkData(false),
 	showTargetingLines(false),
 	showHealthBars(true),
-	zoomLevel(1.0f),
+	zoomLevel(0.5f),
 	windowOffset(glm::vec2(0.0f, 0.0f)),
 	windowOffsetAtPanStart(windowOffset)
 {
@@ -367,4 +367,33 @@ void Renderer::toggleShowHealthBars()
 void Renderer::toggleShowRangeAndVision()
 {
 	showRangeAndVision = !showRangeAndVision;
+}
+
+void Renderer::adjustZoomLevel(int steps)
+{
+	for (int i = 0; i < glm::abs(steps); i++)
+	{
+		if (steps > 0)
+		{
+			if (zoomLevel < 0.5f)
+			{
+				zoomLevel *= 2.0f;
+			}
+			else
+			{
+				zoomLevel += 0.25f;
+			}
+		}
+		else if (steps < 0)
+		{
+			if (zoomLevel <= 0.50f)
+			{
+				zoomLevel *= 0.5f;
+			}
+			else
+			{
+				zoomLevel -= 0.25f;
+			}
+		}
+	}
 }

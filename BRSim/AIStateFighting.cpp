@@ -18,7 +18,8 @@ void AIStateFighting::execute(Agent& owner, const Game& gameState, float frameTi
 	if (owner.currentHealth > owner.aiWeights.fleeHealthThreshold || gameState.circleRadius <= owner.aiWeights.stopFleeingCircleThreshold)
 	{
 		Agent& other = owner.otherVisibleAgents[0];
-		if (owner.rotateTowards(other.position, frameTime))
+		glm::vec2 shootAt = owner.computeTargetInterceptionPoint(other.position, other.currentVelocity());
+		if (owner.rotateTowards(shootAt, frameTime))
 		{
 			if (glm::length(owner.position - other.position) < owner.currentWeapon.range)
 			{
