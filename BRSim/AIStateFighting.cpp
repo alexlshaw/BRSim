@@ -47,10 +47,10 @@ void AIStateFighting::execute(Agent& owner, const Game& gameState, float frameTi
 //Of the agents we can see, which one do we want to shoot most? For now, just the one that requires the least rotation to face
 Agent& AIStateFighting::determinePreferredTarget(const Agent& owner)
 {
-	float closestIndex = -1;
+	int closestIndex = -1;
 	float closestAngle = glm::pi<float>();
 
-	for (int i = 0; i < owner.otherVisibleAgents.size(); i++) {
+	for (unsigned int i = 0; i < owner.otherVisibleAgents.size(); i++) {
 		glm::vec2 toHostile = owner.otherVisibleAgents[i].get().position - owner.position;
 		float distance = glm::length(toHostile);
 
@@ -64,7 +64,7 @@ Agent& AIStateFighting::determinePreferredTarget(const Agent& owner)
 
 		if (angle < closestAngle) {
 			closestAngle = angle;
-			closestIndex = i;
+			closestIndex = static_cast<int>(i);
 		}
 	}
 	return owner.otherVisibleAgents[closestIndex];

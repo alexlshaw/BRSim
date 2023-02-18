@@ -9,6 +9,8 @@ Agent::Agent(glm::vec2 position, float direction, int identity)
 	currentTargetType(TargetType::none),
 	targetPosition(position),
 	id(identity),
+	survivalTime(0.0f),
+	killCount(0),
 	shotCooldownRemainingTime(0.0f),
 	currentHealth(AGENT_MAX_HEALTH),
 	currentArmour(0),
@@ -90,6 +92,7 @@ void Agent::update(const float frameTime, const Game& gameState)
 {
 	//update the agent's internal state, then figure out what it wants to do next
 	shotCooldownRemainingTime = glm::max<float>(0.0f, shotCooldownRemainingTime - frameTime);
+	survivalTime += frameTime;
 	speedLastFrame = 0.0f;	//Important that we reset this *before* executing the AI state, since that can modify it
 	currentState->execute(*this, gameState, frameTime);
 }
@@ -101,6 +104,8 @@ bool Agent::activeAndAlive() const
 
 void Agent::reset()
 {
+	survivalTime = 0.0f;
+	killCount = 0;
 	speedLastFrame = 0.0f;
 	enabled = true;
 	alive = true;

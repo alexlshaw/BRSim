@@ -46,6 +46,8 @@ public:
 	float currentHealth;
 	float currentArmour;
 	int id;
+	float survivalTime;
+	int killCount;
 	TargetType currentTargetType;
 	glm::vec2 targetPosition;	//Location the agent wants to move to unless it is in a fight
 	AIState *currentState;

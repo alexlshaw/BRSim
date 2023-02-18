@@ -1,14 +1,14 @@
 #include "Bullet.h"
 
-Bullet::Bullet(glm::vec2 position, glm::vec2 direction, int ownerID, float range, float damage, float speed)
+Bullet::Bullet(glm::vec2 position, glm::vec2 direction, float range, float damage, float speed, Agent* shooter)
 	:Entity(position),
 	direction(direction),
-	ownerID(ownerID),
 	maxRange(range),
 	damage(damage),
 	bulletSpeed(speed),
 	hitTarget(false),
-	distanceTravelled(0.0f)
+	distanceTravelled(0.0f),
+	shooter(shooter)
 {}
 
 void Bullet::update(float frameTime)

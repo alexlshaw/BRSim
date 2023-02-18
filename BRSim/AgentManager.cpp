@@ -33,10 +33,10 @@ void AgentManager::fireBullet(Agent& shooter)
 {
 	Bullet shot(shooter.position + 3.0f * shooter.forward(),
 		shooter.forward(),
-		shooter.id,
 		shooter.currentWeapon.range,
 		shooter.currentWeapon.bulletDamage,
-		shooter.currentWeapon.bulletSpeed);
+		shooter.currentWeapon.bulletSpeed,
+		&shooter);
 	bullets.push_back(shot);
 	shooter.shotCooldownRemainingTime = shooter.currentWeapon.timeBetweenShots;
 	shooter.firing = false;
@@ -88,7 +88,7 @@ float AgentManager::checkCollision(Bullet& bullet, Agent& agent, float frameTime
 	glm::vec2 closestPoint = bullet.position + pt * glm::normalize(trajectory);
 	if (glm::length(agent.position - closestPoint) < AGENT_COLLISION_RADIUS)
 	{
-		if (bullet.ownerID == agent.id)
+		if (bullet.shooter->id == agent.id)
 		{
 			printf("Stop hitting yourself\n");
 		}
@@ -128,8 +128,9 @@ void AgentManager::hitAgentWithBullet(Agent& agent, Bullet& bullet)
 	agent.currentHealth -= healthDamage;
 	if (agent.currentHealth <= 0)
 	{
+		printf("Agent %i killed by agent %i. Survived %.1f seconds and had %i kills.\n", agent.id, bullet.shooter->id, agent.survivalTime, agent.killCount);
+		bullet.shooter->killCount++;
 		killAgent(agent);
-		printf("Agent %i killed by agent %i.\n", agent.id, bullet.ownerID);
 	}
 	bullet.hitTarget = true;
 }
@@ -162,7 +163,9 @@ void AgentManager::killAgent(Agent& agent)
 		}
 		else
 		{
-			printf("%i agent remains.\n", agentsAlive);
+			//find the only agent that is still alive. Guaranteed to be one, so we don't need to check the output
+			Agent& lastSurvivor = *(std::find_if(agents.begin(), agents.end(), [](Agent& a) { return a.alive; }));
+			printf("Agent %i wins after %.1f seconds, with %i kills.\n", lastSurvivor.id, lastSurvivor.survivalTime, lastSurvivor.killCount);
 		}
 	}
 }
