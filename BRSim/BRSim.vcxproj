@@ -159,6 +159,7 @@
     <ClCompile Include="AIStateFighting.cpp" />
     <ClCompile Include="AIStateFleeing.cpp" />
     <ClCompile Include="AIStateWandering.cpp" />
+    <ClCompile Include="AIWeights.cpp" />
     <ClCompile Include="BodyArmour.cpp" />
     <ClCompile Include="Bullet.cpp" />
     <ClCompile Include="Entity.cpp" />
@@ -193,6 +194,7 @@
     <ClInclude Include="AIStateFighting.h" />
     <ClInclude Include="AIStateFleeing.h" />
     <ClInclude Include="AIStateWandering.h" />
+    <ClInclude Include="AIWeights.h" />
     <ClInclude Include="BodyArmour.h" />
     <ClInclude Include="Bullet.h" />
     <ClInclude Include="CStopWatch.h" />

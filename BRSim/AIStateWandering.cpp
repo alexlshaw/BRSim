@@ -8,7 +8,8 @@ void AIStateWandering::execute(Agent& owner, const Game& gameState, float frameT
 	//1. Switch to fighting if enemies nearby
 	if (!owner.otherVisibleAgents.empty())
 	{
-		if ((owner.currentHealth > AGENT_FLEE_HEALTH_THRESHOLD || gameState.circleRadius <= AGENT_STOP_FLEE_CIRCLE_SIZE) && owner.currentWeapon.weaponType != WeaponType::none)
+		if ((owner.currentHealth > owner.aiWeights.fleeHealthThreshold || gameState.circleRadius <= owner.aiWeights.stopFleeingCircleThreshold) 
+			&& owner.currentWeapon.weaponType != WeaponType::none)
 		{
 			//switch to fighting state
 			setAgentState(owner, new AIStateFighting());
@@ -52,7 +53,7 @@ void AIStateWandering::execute(Agent& owner, const Game& gameState, float frameT
 				priorityItemIndex = i;
 			}
 		}
-		if (priorityItemIndex != -1.0f)
+		if (priorityItemIndex != -1)
 		{
 			//we found an item that's worth our time, go for it
 			owner.setTarget(owner.visibleItems[priorityItemIndex].get().position, TargetType::item);

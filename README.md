@@ -14,11 +14,15 @@
  
  H: Toggle agent health bar visibility
  
+ V: Toggle agent range and visibility indicators
+ 
  W: Show level walkability data
  
  O: Decrease time scale
  
  P: Increase time scale
+ 
+ R: Restart the simulation
 
 ## Libraries etc
 

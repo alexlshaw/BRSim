@@ -13,12 +13,13 @@ void AIStateFighting::execute(Agent& owner, const Game& gameState, float frameTi
 		setAgentState(owner, new AIStateWandering());
 		return;	//Switching state deletes the state object, so we want to wrap up here
 	}
-
+	
 	//2. We have 1+ opponents, do we want this fight?
-	if (owner.currentHealth > AGENT_FLEE_HEALTH_THRESHOLD || gameState.circleRadius <= AGENT_STOP_FLEE_CIRCLE_SIZE)
+	if (owner.currentHealth > owner.aiWeights.fleeHealthThreshold || gameState.circleRadius <= owner.aiWeights.stopFleeingCircleThreshold)
 	{
-		Agent& other = owner.otherVisibleAgents[0];
-		if (owner.rotateTowards(other.position, frameTime))
+		Agent& other = determinePreferredTarget(owner);
+		glm::vec2 shootAt = owner.computeTargetInterceptionPoint(other.position, other.currentVelocity());
+		if (owner.rotateTowards(shootAt, frameTime))
 		{
 			if (glm::length(owner.position - other.position) < owner.currentWeapon.range)
 			{
@@ -41,4 +42,30 @@ void AIStateFighting::execute(Agent& owner, const Game& gameState, float frameTi
 		return;	//Switching state deletes the state object, so we want to wrap up here
 	}
 	
+}
+
+//Of the agents we can see, which one do we want to shoot most? For now, just the one that requires the least rotation to face
+Agent& AIStateFighting::determinePreferredTarget(const Agent& owner)
+{
+	int closestIndex = -1;
+	float closestAngle = glm::pi<float>();
+
+	for (unsigned int i = 0; i < owner.otherVisibleAgents.size(); i++) {
+		glm::vec2 toHostile = owner.otherVisibleAgents[i].get().position - owner.position;
+		float distance = glm::length(toHostile);
+
+		if (distance < 0.001f) {
+			continue; // ignore entities at the same position as the entity
+		}
+
+		toHostile /= distance;
+
+		float angle = glm::angle(owner.forward(), toHostile);
+
+		if (angle < closestAngle) {
+			closestAngle = angle;
+			closestIndex = static_cast<int>(i);
+		}
+	}
+	return owner.otherVisibleAgents[closestIndex];
 }

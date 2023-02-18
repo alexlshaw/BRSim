@@ -21,6 +21,8 @@ void AgentManager::updateAgents(float frameTime, Game& gameState)
 			updateAgentSightOfItems(agent, gameState);
 			checkPickups(agent, gameState);
 			agent.update(frameTime, gameState);
+			checkAndResolveAgentCollisions(agent);
+			//Check agent-agent collisions
 			if (agent.firing)
 			{
 				fireBullet(agent);
@@ -31,12 +33,12 @@ void AgentManager::updateAgents(float frameTime, Game& gameState)
 
 void AgentManager::fireBullet(Agent& shooter)
 {
-	Bullet shot(shooter.position + 3.0f * shooter.forward(),
+	Bullet shot(shooter.position + AGENT_COLLISION_RADIUS * shooter.forward(),
 		shooter.forward(),
-		shooter.id,
 		shooter.currentWeapon.range,
 		shooter.currentWeapon.bulletDamage,
-		shooter.currentWeapon.bulletSpeed);
+		shooter.currentWeapon.bulletSpeed,
+		&shooter);
 	bullets.push_back(shot);
 	shooter.shotCooldownRemainingTime = shooter.currentWeapon.timeBetweenShots;
 	shooter.firing = false;
@@ -88,7 +90,7 @@ float AgentManager::checkCollision(Bullet& bullet, Agent& agent, float frameTime
 	glm::vec2 closestPoint = bullet.position + pt * glm::normalize(trajectory);
 	if (glm::length(agent.position - closestPoint) < AGENT_COLLISION_RADIUS)
 	{
-		if (bullet.ownerID == agent.id)
+		if (bullet.shooter->id == agent.id)
 		{
 			printf("Stop hitting yourself\n");
 		}
@@ -102,9 +104,38 @@ void AgentManager::checkPickups(Agent& agent, Game& gameState)
 {
 	for (auto& item : gameState.items)
 	{
-		if (item.enabled && glm::length(agent.position - item.position) < ITEM_COLLISION_RADIUS)
+		if (item.enabled && glm::length(agent.position - item.position) < ITEM_COLLISION_RADIUS + AGENT_COLLISION_RADIUS)
 		{
 			item.onPickup(agent);
+		}
+	}
+}
+
+void AgentManager::checkAndResolveAgentCollisions(Agent& agent)
+{
+	//Agent-agent collisions
+	for (auto& otherAgent : agents)
+	{
+		if (otherAgent.id != agent.id && otherAgent.activeAndAlive())
+		{
+			glm::vec2 displacement = otherAgent.position - agent.position;
+			float displacementLength = glm::length(displacement);
+			//handle the case where the agents are not just overlapping, but co-located
+			if (displacementLength == 0.0f)
+			{
+				displacement = glm::vec2(0.0f, 1.0f);
+			}
+			//check if they should be pushed away from each other
+			if (displacementLength < 2.0f * AGENT_COLLISION_RADIUS)
+			{
+				//they're too close
+				glm::vec2 midPoint = agent.position + (0.5f * displacement);
+				glm::vec2 push = glm::normalize(displacement) * AGENT_COLLISION_RADIUS;
+				//Move this agent away from the midpoint, in the direction of the vector from the midpoint to its current position
+				agent.position = midPoint - push;
+				//Move the other agent away from the midpoint, in the direction of the vector from the midpoint to its current position
+				otherAgent.position = midPoint + push;
+			}
 		}
 	}
 }
@@ -128,8 +159,9 @@ void AgentManager::hitAgentWithBullet(Agent& agent, Bullet& bullet)
 	agent.currentHealth -= healthDamage;
 	if (agent.currentHealth <= 0)
 	{
+		printf("Agent %i killed by agent %i. Survived %.1f seconds and had %i kills.\n", agent.id, bullet.shooter->id, agent.survivalTime, agent.killCount);
+		bullet.shooter->killCount++;
 		killAgent(agent);
-		printf("Agent %i killed by agent %i.\n", agent.id, bullet.ownerID);
 	}
 	bullet.hitTarget = true;
 }
@@ -143,6 +175,7 @@ void AgentManager::hurtAgentsOutsideCircle(const Game& gameState)
 			agent.currentHealth -= (int)gameState.circleDamageTick;
 			if (agent.currentHealth < 0.0f)
 			{
+				printf("Agent %i died outside the circle.\n", agent.id);
 				killAgent(agent);
 			}
 		}
@@ -162,7 +195,9 @@ void AgentManager::killAgent(Agent& agent)
 		}
 		else
 		{
-			printf("%i agent remains.\n", agentsAlive);
+			//find the only agent that is still alive. Guaranteed to be one, so we don't need to check the output
+			Agent& lastSurvivor = *(std::find_if(agents.begin(), agents.end(), [](Agent& a) { return a.alive; }));
+			printf("Agent %i wins after %.1f seconds, with %i kills.\n", lastSurvivor.id, lastSurvivor.survivalTime, lastSurvivor.killCount);
 		}
 	}
 }
@@ -206,4 +241,16 @@ void AgentManager::updateAgentSightOfItems(Agent& agent, const Game& gameState)
 			}
 		}
 	}
+}
+
+void AgentManager::restart()
+{
+	elapsedDamageTickTime = 0.0f;
+	agentsAlive = MAX_AGENTS;
+	for (auto& agent : agents)
+	{
+		agent.reset();
+		agent.position = levelData.randomWalkableLocation();
+	}
+	bullets.clear();
 }

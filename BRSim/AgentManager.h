@@ -9,7 +9,7 @@
 #include "glm/glm.hpp"
 
 const int MAX_AGENTS = 20;	//default 20
-const float AGENT_COLLISION_RADIUS = 1.0f;
+const float AGENT_COLLISION_RADIUS = 3.0f;
 
 class AgentManager
 {
@@ -24,6 +24,7 @@ public:
 	std::vector<Bullet> bullets;
 	float checkCollision(Bullet& bullet, Agent& agent, float frameTime);
 	void spawnAgents();
+	void restart();
 private:
 	void hurtAgentsOutsideCircle(const Game& gameState);
 	void hitAgentWithBullet(Agent& agent, Bullet& bullet);
@@ -31,6 +32,7 @@ private:
 	void updateAgentSightOfOtherAgents(Agent& agent);
 	void updateAgentSightOfItems(Agent& agent, const Game& gameState);
 	void checkPickups(Agent& agent, Game& gameState);
+	void checkAndResolveAgentCollisions(Agent& agent);	//Currently just resolving agent-agent collisions
 	void fireBullet(Agent& shooter);
 	Level& levelData;
 	float elapsedDamageTickTime;

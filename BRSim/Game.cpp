@@ -7,8 +7,10 @@ Game::Game(Level& level)
 	circleCentre(glm::vec2(level.width / 2.0f, level.height / 2.0f)),
 	circleRadius((float)glm::max<int>(level.width, level.height) * 1.5f),
 	previousCircleRadius(circleRadius),
-	previousCircleCentre(circleCentre)
+	previousCircleCentre(circleCentre),
+	elapsedShrinkTime(0.0f)
 {
+	initialiseItems();
 	spawnItems();
 	newCircle();
 }
@@ -68,7 +70,7 @@ bool Game::isPositionInsideCurrentCircle(glm::vec2 position) const
 
 }
 
-void Game::spawnItems()
+void Game::initialiseItems()
 {
 	EquippedWeapon pistol(WeaponType::pistol, 20.0f, 1.0f, 60.0f, 100.0f);
 	EquippedWeapon assaultRifle(WeaponType::assaultRifle, 20.0f, 0.35f, 60.0f, 100.0f);
@@ -79,7 +81,10 @@ void Game::spawnItems()
 	pistolBase = std::make_unique<Weapon>("Gun-Pistol.png", ItemType::gunPistol, pistol);
 	assaultRifleBase = std::make_unique<Weapon>("Gun-AssaultRifle.png", ItemType::gunAssaultRifle, assaultRifle);
 	sniperRifleBase = std::make_unique<Weapon>("Gun-SniperRifle.png", ItemType::gunSniperRifle, sniperRifle);
+}
 
+void Game::spawnItems()
+{
 	items.reserve(TOTAL_ITEM_SPAWNS);
 	spawnItemSet(*healthpackBase, items, HEALTHPACK_COUNT);
 	spawnItemSet(*bodyArmourBase, items, ARMOUR_COUNT);
@@ -94,4 +99,20 @@ void Game::spawnItemSet(Item& item, std::vector<ItemInstance>& items, int number
 	{
 		items.push_back(ItemInstance(item, levelData.randomWalkableLocation()));
 	}
+}
+
+void Game::restart()
+{
+	//reset the circles
+	elapsedShrinkTime = 0.0f;
+	circleNumber = 1;
+	circleDamageTick = 1.0f;
+	circleCentre = glm::vec2(levelData.width / 2.0f, levelData.height / 2.0f);
+	circleRadius = (float)glm::max<int>(levelData.width, levelData.height) * 1.5f;
+	previousCircleRadius = circleRadius;
+	previousCircleCentre = circleCentre;
+	newCircle();
+	//reset the items
+	items.clear();
+	spawnItems();
 }

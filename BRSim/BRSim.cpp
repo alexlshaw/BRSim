@@ -33,6 +33,12 @@ std::unique_ptr<Level> level;
 std::unique_ptr<AgentManager> manager;
 std::unique_ptr<Game> gameState;
 
+void restartGame()
+{
+	gameState->restart();
+	manager->restart();
+}
+
 void error_callback(int error, const char* description)
 {
 	fprintf(stderr, "Error: %s\n", description);
@@ -40,53 +46,56 @@ void error_callback(int error, const char* description)
 
 void key_callback(GLFWwindow* window, int key, int scancode, int action, int mods)
 {
-	if (key == GLFW_KEY_ESCAPE && action == GLFW_PRESS)
+	//all valid key actions happen on PRESS
+	if (action == GLFW_PRESS)
 	{
-		shouldExit = true;
-	}
-	if (key == GLFW_KEY_T && action == GLFW_PRESS)
-	{
-		renderer->toggleShowTargetingLines();
-	}
-	if (key == GLFW_KEY_V && action == GLFW_PRESS)
-	{
-		renderer->toggleShowRangeAndVision();
-	}
-	if (key == GLFW_KEY_W && action == GLFW_PRESS)
-	{
-		renderer->toggleShowLevelWalkData();
-	}
-	if (key == GLFW_KEY_H && action == GLFW_PRESS)
-	{
-		renderer->toggleShowHealthBars();
-	}
-	if (key == GLFW_KEY_O && action == GLFW_PRESS)
-	{
-		//reduce timestep
-		timeRate -= 1.0f;
-		if (timeRate == 0.0f)	//we just decreased from 1, we actually want to go to 0.5 here
+		switch (key)
 		{
-			timeRate = 0.5f;
+		case GLFW_KEY_ESCAPE:
+			shouldExit = true;
+			break;
+		case GLFW_KEY_T:
+			renderer->toggleShowTargetingLines();
+			break;
+		case GLFW_KEY_V:
+			renderer->toggleShowRangeAndVision();
+			break;
+		case GLFW_KEY_W:
+			renderer->toggleShowLevelWalkData();
+			break;
+		case GLFW_KEY_H:
+			renderer->toggleShowHealthBars();
+			break;
+		case GLFW_KEY_R:
+			restartGame();
+			break;
+		case GLFW_KEY_O:
+			//reduce timestep
+			timeRate -= 1.0f;
+			if (timeRate == 0.0f)	//we just decreased from 1, we actually want to go to 0.5 here
+			{
+				timeRate = 0.5f;
+			}
+			else if (timeRate < 0.0f)	//we've just tried to go down from 0.5, or we were already paused
+			{
+				timeRate = 0.0f;
+			}
+			printf("Decreasing time scale to %.1f\n", timeRate);
+			break;
+		case GLFW_KEY_P:
+			//increase timestep
+			timeRate += 1.0f;
+			if (timeRate == 1.0f) // we were paused, we actually want to go to 0.5 here
+			{
+				timeRate = 0.5f;
+			}
+			else if (timeRate == 1.5f)	//we were on 0.5, we actually want to go to 1 here
+			{
+				timeRate = 1.0f;
+			}
+			printf("Increasing time scale to %.1f\n", timeRate);
+			break;
 		}
-		else if (timeRate < 0.0f)	//we've just tried to go down from 0.5, or we were already paused
-		{
-			timeRate = 0.0f;
-		}
-		printf("Decreasing time scale to %.1f\n", timeRate);
-	}
-	if (key == GLFW_KEY_P && action == GLFW_PRESS)
-	{
-		//increase timestep
-		timeRate += 1.0f;
-		if (timeRate == 1.0f) // we were paused, we actually want to go to 0.5 here
-		{
-			timeRate = 0.5f;
-		}
-		else if (timeRate == 1.5f)	//we were on 0.5, we actually want to go to 1 here
-		{
-			timeRate = 1.0f;
-		}
-		printf("Increasing time scale to %.1f\n", timeRate);
 	}
 }
 
@@ -110,15 +119,7 @@ void mouse_button_callback(GLFWwindow* window, int button, int action, int mods)
 void scroll_callback(GLFWwindow* window, double xoffset, double yoffset)
 {
 	//mousewheel only gives y offsets (integral values, 1 per mouse-wheel-click per frame it seems, up is +ve, down -ve)
-	if (yoffset > 0.0f)
-	{
-		renderer->zoomLevel *= 2.0f;
-	}
-	else if (yoffset < 0.0f)
-	{
-		renderer->zoomLevel *= 0.5f;
-	}
-	printf("Zooming to: %.2f\n", renderer->zoomLevel);
+	renderer->adjustZoomLevel((int)yoffset);
 }
 
 int init_GLFW()
