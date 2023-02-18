@@ -21,6 +21,8 @@ void AgentManager::updateAgents(float frameTime, Game& gameState)
 			updateAgentSightOfItems(agent, gameState);
 			checkPickups(agent, gameState);
 			agent.update(frameTime, gameState);
+			checkAndResolveAgentCollisions(agent);
+			//Check agent-agent collisions
 			if (agent.firing)
 			{
 				fireBullet(agent);
@@ -31,7 +33,7 @@ void AgentManager::updateAgents(float frameTime, Game& gameState)
 
 void AgentManager::fireBullet(Agent& shooter)
 {
-	Bullet shot(shooter.position + 3.0f * shooter.forward(),
+	Bullet shot(shooter.position + AGENT_COLLISION_RADIUS * shooter.forward(),
 		shooter.forward(),
 		shooter.currentWeapon.range,
 		shooter.currentWeapon.bulletDamage,
@@ -102,9 +104,38 @@ void AgentManager::checkPickups(Agent& agent, Game& gameState)
 {
 	for (auto& item : gameState.items)
 	{
-		if (item.enabled && glm::length(agent.position - item.position) < ITEM_COLLISION_RADIUS)
+		if (item.enabled && glm::length(agent.position - item.position) < ITEM_COLLISION_RADIUS + AGENT_COLLISION_RADIUS)
 		{
 			item.onPickup(agent);
+		}
+	}
+}
+
+void AgentManager::checkAndResolveAgentCollisions(Agent& agent)
+{
+	//Agent-agent collisions
+	for (auto& otherAgent : agents)
+	{
+		if (otherAgent.id != agent.id && otherAgent.activeAndAlive())
+		{
+			glm::vec2 displacement = otherAgent.position - agent.position;
+			float displacementLength = glm::length(displacement);
+			//handle the case where the agents are not just overlapping, but co-located
+			if (displacementLength == 0.0f)
+			{
+				displacement = glm::vec2(0.0f, 1.0f);
+			}
+			//check if they should be pushed away from each other
+			if (displacementLength < 2.0f * AGENT_COLLISION_RADIUS)
+			{
+				//they're too close
+				glm::vec2 midPoint = agent.position + (0.5f * displacement);
+				glm::vec2 push = glm::normalize(displacement) * AGENT_COLLISION_RADIUS;
+				//Move this agent away from the midpoint, in the direction of the vector from the midpoint to its current position
+				agent.position = midPoint - push;
+				//Move the other agent away from the midpoint, in the direction of the vector from the midpoint to its current position
+				otherAgent.position = midPoint + push;
+			}
 		}
 	}
 }
@@ -144,6 +175,7 @@ void AgentManager::hurtAgentsOutsideCircle(const Game& gameState)
 			agent.currentHealth -= (int)gameState.circleDamageTick;
 			if (agent.currentHealth < 0.0f)
 			{
+				printf("Agent %i died outside the circle.\n", agent.id);
 				killAgent(agent);
 			}
 		}
